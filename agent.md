@@ -30,8 +30,8 @@ Statuses: ⬜ Not started · 🔧 In progress · ✅ Done
 ---
 
 ## Two User Roles
-**Admin** (internal team) — manages content via Django admin. Adds questions, tags, manages organizations.
-**Teacher** (client users) — logs in to a custom dashboard. Generates exams. Sees only their organization's data.
+**Admin** (internal team) — manages all content via Django admin. Adds global questions, tags, manages organizations.
+**Teacher** (client users) — logs in to a custom dashboard. Generates exams. Can add questions scoped to their own organization. Sees only their organization's data.
 
 ---
 
@@ -39,7 +39,7 @@ Statuses: ⬜ Not started · 🔧 In progress · ✅ Done
 
 ```
 accounts/    # Custom user model, Organization model, login/logout, role-based redirect
-questions/   # Question, Choice, Tag, TagCategory models + content management via Django admin
+questions/   # Question, Choice, Tag, TagCategory models + admin (global) + teacher-facing views (org-scoped)
 exams/       # Exam generation algorithm (services.py), Exam model
 dashboard/   # Teacher-facing panel, exam history — no models, reads from exams/
 core/        # Shared mixins, context processors, template tags — no models, no migrations
@@ -55,6 +55,9 @@ core/        # Shared mixins, context processors, template tags — no models, n
 | `/logout/` | `logout_view` | accounts |
 | `/dashboard/` | `DashboardHomeView` | dashboard |
 | `/dashboard/profile/` | `ProfileView` | dashboard |
+| `/questions/` | `QuestionListView` | questions |
+| `/questions/add/` | `QuestionCreateView` | questions |
+| `/questions/<id>/edit/` | `QuestionUpdateView` | questions |
 | `/exams/create/` | `ExamCreateView` | exams |
 | `/exams/<id>/preview/` | `ExamPreviewView` | exams |
 | `/exams/history/` | `ExamHistoryView` | exams |
@@ -67,12 +70,22 @@ core/        # Shared mixins, context processors, template tags — no models, n
 ### accounts
 - **Organization** → `name`, `slug`, `created_at`
 - **User** (AbstractUser) → `role` (admin/teacher), `organization` FK
+  - `first_name` ve `last_name` → AbstractUser'dan gelir, kayıt sırasında **zorunlu** tutulur
+  - Bu alanlar soru sahipliğini göstermek için kullanılır (`created_by.get_full_name()`)
 
 ### questions
 - **TagCategory** → `name` (e.g. Grammar, Skill, Format)
 - **Tag** → `name`, `category` FK
-- **Question** → `level` (A1–C2), `text`, `image`, `tags` M2M, `is_active`
+- **Question** → `level` (A1–C2), `text`, `image`, `tags` M2M, `is_active`,
+  `organization` FK (null=True → global soru), `created_by` FK (null=True → admin ekledi)
 - **Choice** → `question` FK, `text`, `is_correct`
+
+#### Question havuzu mantığı
+| `organization` | `created_by` | Anlamı |
+|---|---|---|
+| `None` | `None` | Admin'in eklediği global soru |
+| `None` | admin user | Admin'in eklediği global soru |
+| Okul A | Teacher X | Okul A'ya özel, Teacher X'in eklediği soru |
 
 ### exams
 - **Exam** → `teacher` FK, `organization` FK, `parameters` JSONField, `questions` M2M, `created_at`
@@ -103,7 +116,9 @@ All questions use the same model. Type is determined by tags:
 - `is_active=False` questions are never included in exam generation
 - A question cannot appear twice in the same exam
 - Teachers can only see exams belonging to their own organization
+- Teachers can only see/edit questions they created (org-scoped), plus all global questions (read-only)
 - If not enough questions exist for given constraints, return a user-facing error (do not silently skip)
+- `organization` ve `created_by` alanları soru eklenirken view tarafından otomatik set edilir — teacher form'dan seçmez
 
 ---
 
@@ -112,7 +127,12 @@ Teacher inputs: total question count + per-level min/max percentage ranges + opt
 
 Algorithm flow (`exams/services.py`):
 1. `_calculate_counts()` — convert ratio inputs into exact per-level question counts
-2. `_filter_questions()` — apply level + tag filters to Question queryset
+2. `_filter_questions()` — apply level + tag filters; **global sorular (org=None) + teacher'ın org soruları** birlikte havuza alınır:
+   ```python
+   Question.objects.filter(is_active=True).filter(
+       Q(organization=None) | Q(organization=teacher.organization)
+   )
+   ```
 3. `_validate_counts()` — check if enough active questions exist; raise error if not
 4. `_sample_questions()` — draw randomly using `random.sample`
 5. `generate()` — orchestrates all above, saves and returns the Exam instance
@@ -121,7 +141,7 @@ Algorithm flow (`exams/services.py`):
 
 ## Auth Flow
 - Login → check role → admin goes to `/admin/`, teacher goes to `/dashboard/`
-- Teachers only see their own organization's exams
+- Teachers only see their own organization's exams and questions
 - Django session auth (no JWT, no API keys)
 
 ---
@@ -133,7 +153,7 @@ Algorithm flow (`exams/services.py`):
 
 | File | Content |
 |------|---------|
-| `models.py` | `Organization`, `User` (AbstractUser with role + organization FK) |
+| `models.py` | `Organization`, `User` (AbstractUser with role + organization FK; first_name/last_name zorunlu) |
 | `views.py` | `login_view`, `logout_view`, `role_redirect_view` |
 | `forms.py` | `LoginForm` |
 | `mixins.py` | `TeacherRequiredMixin`, `AdminRequiredMixin` |
@@ -142,12 +162,14 @@ Algorithm flow (`exams/services.py`):
 ---
 
 ### `questions/`
-**Purpose:** Question bank content management. All CRUD via Django admin. No separate views needed.
+**Purpose:** Question bank content management. Global sorular Django admin üzerinden yönetilir. Org'a özel sorular teacher-facing view'lar üzerinden eklenir.
 
 | File | Content |
 |------|---------|
-| `models.py` | `TagCategory`, `Tag`, `Question`, `Choice` |
-| `admin.py` | `ChoiceInline` (inline inside Question admin), `QuestionAdmin` (level/tag/is_active filters), `TagAdmin`, `TagCategoryAdmin` |
+| `models.py` | `TagCategory`, `Tag`, `Question` (organization + created_by FK dahil), `Choice` |
+| `admin.py` | `ChoiceInline`, `QuestionAdmin` (level/tag/is_active/organization filtreleri), `TagAdmin`, `TagCategoryAdmin` |
+| `views.py` | `QuestionListView`, `QuestionCreateView`, `QuestionUpdateView` (sadece teacher erişimli, org-scoped) |
+| `forms.py` | `QuestionForm` (organization ve created_by alanları hariç — view'da otomatik set edilir) |
 
 ---
 
@@ -189,8 +211,9 @@ Algorithm flow (`exams/services.py`):
 Browser
   → accounts/      (login, role check)
   → dashboard/     (home, recent exams)
+  → questions/     (teacher kendi sorularını ekler/listeler)
   → exams/create   (form: count + level ratios + tag filters)
-  → services.py    (ExamGeneratorService runs)
+  → services.py    (ExamGeneratorService: global + org soruları birleşik havuzdan seçer)
   → exams/preview  (generated exam displayed, print button)
 ```
 
@@ -225,3 +248,4 @@ Examples:
 - "ExamGeneratorService'in _calculate_counts metodunu birlikte yazalım."
 - "Dashboard'da teacher sadece kendi org sınavlarını görsün, OrgFilterMixin'i nasıl uygularım?"
 - "Question admin'inde ChoiceInline'ı nasıl kurarım?"
+- "Teacher soru eklerken organization ve created_by otomatik nasıl set edilir?"
