@@ -243,6 +243,8 @@ settings/
 2. Update the **Current Status** table to reflect what's done
 3. State which app/area you're working on
 
+## Example of run command 
+- docker compose exec web uv run python manage.py check 
 Examples:
 - "accounts app'ini yazıyorum, login_view'ı nasıl yapılandırmalıyım?"
 - "ExamGeneratorService'in _calculate_counts metodunu birlikte yazalım."

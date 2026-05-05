@@ -21,16 +21,16 @@ Proje kurulumu
 
 ## Aşama 0 — Proje Kurulumu
 
-- [ ] `uv` ile yeni proje oluştur, `requirements` dosyasını hazırla
-- [ ] `django-admin startproject config .` — proje adı `config`
-- [ ] `settings/` klasörünü oluştur: `base.py`, `local.py`, `production.py`
-- [ ] `base.py`'a temel ayarları taşı (INSTALLED_APPS, TEMPLATES, STATIC, MEDIA)
-- [ ] `local.py`: DEBUG=True, local PostgreSQL bağlantısı
-- [ ] `production.py`: DEBUG=False, SECRET_KEY env'den, ALLOWED_HOSTS
-- [ ] `docker-compose.yml` yaz: `web` + `db` servisleri
-- [ ] `Dockerfile` yaz
-- [ ] `.env.example` dosyası oluştur
-- [ ] `python manage.py check` hatasız geçsin
+- [x] `uv` ile yeni proje oluştur, `pyproject.toml` dosyasını hazırla
+- [x] `django-admin startproject config .` — proje adı `config`
+- [x] `settings/` klasörünü oluştur: `base.py`, `local.py`, `production.py`
+- [x] `base.py`'a temel ayarları taşı (INSTALLED_APPS, TEMPLATES, STATIC, MEDIA)
+- [x] `local.py`: DEBUG=True, local PostgreSQL bağlantısı
+- [x] `production.py`: DEBUG=False, SECRET_KEY env'den, ALLOWED_HOSTS
+- [x] `docker-compose.yml` yaz: `web` + `db` servisleri
+- [x] `Dockerfile` yaz
+- [x] `.env.example` dosyası oluştur
+- [x] `python manage.py check` hatasız geçsin
 
 **Kontrol:** `docker compose up` ile proje ayağa kalksın, Django karşılama sayfası görünsün.
 
