@@ -1,217 +1,281 @@
 # Build Progress — English Question Bank System
 
-> Her adımı bitirince `[ ]` → `[x]` yap.
-> Bir sonraki chat'e bu dosyayı da agent.md ile birlikte yapıştır.
+> Check off each step as you complete it: `[ ]` → `[x]`
+> Paste this file together with agent.md at the start of every new chat.
 
 ---
 
-## Neden Bu Sıra?
+## Why This Order?
 
 ```
-Proje kurulumu
-  → accounts/   (her şey User'a bağlı, önce o olmalı)
-    → core/     (mixin'ler accounts'a bağlı)
-      → questions/  (soru bankası, User + Org gerektirir)
-        → exams/    (questions ve accounts gerektirir)
-          → dashboard/  (exams'i okur, en son gelir)
-            → Polish    (template, static, deploy)
+Project setup
+  → accounts/   (everything depends on User, must come first)
+    → core/     (mixins depend on accounts)
+      → questions/  (question bank, requires User + Org)
+        → students/   (requires User + Org)
+          → exams/    (requires questions + accounts + students)
+            → dashboard/  (reads from exams + students, comes last)
+              → org/      (reads from everything, comes last)
+                → Polish  (templates, static, deploy)
 ```
 
 ---
 
-## Aşama 0 — Proje Kurulumu
+## Stage 0 — Project Setup
 
-- [x] `uv` ile yeni proje oluştur, `pyproject.toml` dosyasını hazırla
-- [x] `django-admin startproject config .` — proje adı `config`
-- [x] `settings/` klasörünü oluştur: `base.py`, `local.py`, `production.py`
-- [x] `base.py`'a temel ayarları taşı (INSTALLED_APPS, TEMPLATES, STATIC, MEDIA)
-- [x] `local.py`: DEBUG=True, local PostgreSQL bağlantısı
-- [x] `production.py`: DEBUG=False, SECRET_KEY env'den, ALLOWED_HOSTS
-- [x] `docker-compose.yml` yaz: `web` + `db` servisleri
-- [x] `Dockerfile` yaz
-- [x] `.env.example` dosyası oluştur
-- [x] `python manage.py check` hatasız geçsin
+- [x] Create new project with `uv`, prepare `pyproject.toml`
+- [x] `django-admin startproject config .` — project name `config`
+- [x] Create `settings/` folder: `base.py`, `local.py`, `production.py`
+- [x] Move base settings to `base.py` (INSTALLED_APPS, TEMPLATES, STATIC, MEDIA)
+- [x] `local.py`: DEBUG=True, local PostgreSQL connection
+- [x] `production.py`: DEBUG=False, SECRET_KEY from env, ALLOWED_HOSTS
+- [x] Write `docker-compose.yml`: `web` + `db` services
+- [x] Write `Dockerfile`
+- [x] Create `.env.example`
+- [x] `python manage.py check` passes without errors
 
-**Kontrol:** `docker compose up` ile proje ayağa kalksın, Django karşılama sayfası görünsün.
+**Check:** `docker compose up` brings the project up, Django welcome page visible.
 
 ---
 
-## Aşama 1 — `accounts/` Uygulaması
+## Stage 1 — `accounts/` App
 
-> Diğer tüm app'ler User ve Organization'a bağlı. Bu app olmadan hiçbir şey yazılamaz.
+> All other apps depend on User and Organization. Nothing else can be written without this.
 
-### 1.1 Modeller
-- [ ] `accounts` app'ini oluştur, `INSTALLED_APPS`'e ekle
-- [ ] `Organization` modelini yaz: `name`, `slug`, `created_at`
-- [ ] `User` modelini yaz (AbstractUser):
-  - `role` → `CharField(choices=[admin, teacher])`
+### 1.1 Models
+- [x] Create `accounts` app, add to `INSTALLED_APPS`
+- [x] Write `Organization` model: `name`, `slug`, `created_at`
+- [x] Write `User` model (AbstractUser):
+  - `role` → `CharField(choices=[admin, org_admin, teacher])`
   - `organization` → `ForeignKey(Organization, null=True, blank=True)`
-  - `first_name` ve `last_name` → `blank=False` olarak override et (zorunlu)
-- [ ] `settings/base.py`'a `AUTH_USER_MODEL = 'accounts.User'` ekle
-- [ ] Migration oluştur ve uygula — **başka migration olmadan önce bu yapılmalı**
+  - `first_name` and `last_name` → override with `blank=False` (required)
+- [x] Add `AUTH_USER_MODEL = 'accounts.User'` to `settings/base.py`
+- [x] Create and apply migration — **must be done before any other migrations**
 
 ### 1.2 Admin
-- [ ] `OrganizationAdmin` yaz
-- [ ] `UserAdmin` yaz: `role`, `organization`, `first_name`, `last_name` görünsün
+- [x] Write `OrganizationAdmin`
+- [x] Write `UserAdmin`: `role`, `organization`, `first_name`, `last_name` visible
 
 ### 1.3 Auth Views
-- [ ] `LoginForm` yaz (`forms.py`)
-- [ ] `login_view` yaz: POST → rol kontrolü → admin `/admin/`'e, teacher `/dashboard/`'a
-- [ ] `logout_view` yaz
-- [ ] `role_redirect_view` yaz (giriş yapılmışsa doğru yere yönlendir)
-- [ ] URL'leri bağla: `/login/`, `/logout/`
+- [x] Write `LoginForm` (`forms.py`)
+- [x] Write `login_view`: POST → role check → admin to `/admin/`, org_admin to `/org/`, teacher to `/dashboard/`
+- [x] Write `logout_view`
+- [x] Write `role_redirect_view` (redirect already logged-in users to correct page)
+- [x] Wire up URLs: `/login/`, `/logout/`
 
-### 1.4 Mixin'ler
-- [ ] `TeacherRequiredMixin` yaz
-- [ ] `AdminRequiredMixin` yaz
+### 1.4 Mixins
+- [ ] Write `TeacherRequiredMixin`
+- [ ] Write `OrgAdminRequiredMixin`
+- [ ] Write `AdminRequiredMixin`
 
 ### 1.5 Template
-- [ ] `templates/accounts/login.html` yaz (Bootstrap 5)
+- [ ] Write `templates/accounts/login.html` (Bootstrap 5)
 
-**Kontrol:** Admin ve teacher ile giriş yap, doğru sayfalara yönlendirilsin. Giriş yapılmadan `/dashboard/`'a gitmeye çalışınca `/login/`'e dönsün.
-
----
-
-## Aşama 2 — `core/` Uygulaması
-
-> Diğer app'lerde kullanılacak ortak araçlar. Erken yazılırsa sonraki adımlarda hazır olur.
-
-- [ ] `core` app'ini oluştur (migrations klasörü olmayacak — `AppConfig`'de belirt)
-- [ ] `OrgFilterMixin` yaz: queryset'i `request.user.organization`'a göre filtrele
-- [ ] `user_role_context` context processor yaz: her template'e `role` inject et
-- [ ] `settings/base.py`'a context processor'ı ekle
-- [ ] `core/templatetags/` klasörünü oluştur
-- [ ] `active_nav` template tag'ini yaz: aktif nav linkine Bootstrap `active` class'ı ekle
-
-**Kontrol:** Herhangi bir template'de `{{ role }}` yazınca doğru değeri dönsün.
+**Check:** Login as admin, org_admin, and teacher — each redirects to the correct page. Visiting `/dashboard/` without login redirects to `/login/`.
 
 ---
 
-## Aşama 3 — `questions/` Uygulaması
+## Stage 2 — `core/` App
 
-### 3.1 Modeller
-- [ ] `questions` app'ini oluştur
-- [ ] `TagCategory` modelini yaz: `name`
-- [ ] `Tag` modelini yaz: `name`, `category` FK
-- [ ] `Question` modelini yaz:
+> Shared tools used by other apps. Write early so they're ready for later stages.
+
+- [ ] Create `core` app (no migrations folder — specify in `AppConfig`)
+- [ ] Write `OrgFilterMixin`: filter querysets by `request.user.organization`
+- [ ] Write `user_role_context` context processor: inject `role` into every template
+- [ ] Add context processor to `settings/base.py`
+- [ ] Create `core/templatetags/` folder
+- [ ] Write `active_nav` template tag: add Bootstrap `active` class to active nav link
+
+**Check:** Writing `{{ role }}` in any template returns the correct value.
+
+---
+
+## Stage 3 — `questions/` App
+
+### 3.1 Models
+- [ ] Create `questions` app
+- [ ] Write `TagCategory` model: `name`
+- [ ] Write `Tag` model: `name`, `category` FK
+- [ ] Write `Question` model:
   - `level` → `CharField(choices=[A1, A2, B1, B2, C1, C2])`
   - `text`, `image` (Pillow), `is_active`
   - `tags` → M2M (Tag)
   - `organization` → `ForeignKey(Organization, null=True, blank=True)`
   - `created_by` → `ForeignKey(User, null=True, blank=True)`
-- [ ] `Choice` modelini yaz: `question` FK, `text`, `is_correct`
-- [ ] Migration oluştur ve uygula
+- [ ] Write `Choice` model: `question` FK, `text`, `is_correct`
+- [ ] Create and apply migration
 
-### 3.2 Admin (Global Sorular)
-- [ ] `ChoiceInline` yaz (Question admin içinde satır satır seçenek girişi)
-- [ ] `QuestionAdmin` yaz: level / tag / is_active / organization filtreleri
-- [ ] `TagAdmin` ve `TagCategoryAdmin` yaz
-- [ ] Birkaç örnek soru admin'den ekle (test için)
+### 3.2 Admin (Global Questions)
+- [ ] Write `ChoiceInline` (inline choice entry inside Question admin)
+- [ ] Write `QuestionAdmin`: level / tag / is_active / organization filters
+- [ ] Write `TagAdmin` and `TagCategoryAdmin`
+- [ ] Add a few sample questions via admin (for testing)
 
-### 3.3 Teacher-Facing Views (Org'a Özel Sorular)
-- [ ] `QuestionForm` yaz: `organization` ve `created_by` alanları **form'da yok**
-- [ ] `QuestionListView` yaz: sadece `created_by=request.user` olan sorular
-- [ ] `QuestionCreateView` yaz:
-  - `form_valid()` içinde `organization` ve `created_by` otomatik set et
-  - `TeacherRequiredMixin` kullan
-- [ ] `QuestionUpdateView` yaz: sadece kendi sorusunu düzenleyebilsin
-- [ ] URL'leri bağla: `/questions/`, `/questions/add/`, `/questions/<id>/edit/`
-- [ ] Template'leri yaz: liste ve form sayfaları
+### 3.3 Teacher-Facing Views (Org-Scoped Questions)
+- [ ] Write `QuestionForm`: `organization` and `created_by` fields **not in form**
+- [ ] Write `QuestionListView`: only questions where `created_by=request.user`
+- [ ] Write `QuestionCreateView`:
+  - Set `organization` and `created_by` automatically in `form_valid()`
+  - Use `TeacherRequiredMixin`
+- [ ] Write `QuestionUpdateView`: teacher can only edit their own questions
+- [ ] Wire up URLs: `/questions/`, `/questions/add/`, `/questions/<id>/edit/`
+- [ ] Write templates: list and form pages
 
-**Kontrol:** Admin global soru ekleyebilsin. Teacher kendi sorusunu ekleyip listeleyebilsin, başkasının sorusunu düzenleyemesin.
+**Check:** Admin can add global questions. Teacher can add and list their own questions. Teacher cannot edit another teacher's question.
 
 ---
 
-## Aşama 4 — `exams/` Uygulaması
+## Stage 4 — `students/` App
 
-### 4.1 Model
-- [ ] `exams` app'ini oluştur
-- [ ] `Exam` modelini yaz:
+> Students are not users — they are records tracked by teachers.
+
+### 4.1 Models
+- [ ] Create `students` app
+- [ ] Write `Student` model:
+  - `first_name`, `last_name`
+  - `organization` → FK (Organization)
+  - `teacher` → FK (User)
+  - `created_at`
+- [ ] Write `ExamResult` model:
+  - `student` → FK (Student)
+  - `exam` → FK (Exam)
+  - `score`
+  - `date`
+  - `notes` (optional)
+- [ ] Create and apply migration
+
+### 4.2 Forms
+- [ ] Write `StudentForm`: `organization` and `teacher` set automatically in view
+- [ ] Write `ExamResultForm`
+
+### 4.3 Views
+- [ ] Write `StudentListView`: only `teacher=request.user` students
+- [ ] Write `StudentCreateView`: set `organization` and `teacher` automatically
+- [ ] Write `StudentDetailView`: student info + exam results list
+- [ ] Wire up URLs: `/students/`, `/students/add/`, `/students/<id>/`
+- [ ] Write templates
+
+**Check:** Teacher can add students and record exam results. Teacher cannot see another teacher's students.
+
+---
+
+## Stage 5 — `exams/` App
+
+### 5.1 Model
+- [ ] Create `exams` app
+- [ ] Write `Exam` model:
   - `teacher` FK (User)
   - `organization` FK (Organization)
   - `parameters` JSONField
   - `questions` M2M (Question)
   - `created_at`
-- [ ] Migration oluştur ve uygula
+- [ ] Create and apply migration
 
-### 4.2 Servis Katmanı (`services.py`)
-> View'dan bağımsız yaz. Test edilebilir olsun.
+### 5.2 Service Layer (`services.py`)
+> Write independently from views. Must be testable.
 
-- [ ] `ExamGeneratorService` class'ını oluştur, constructor'a `teacher` ve `params` al
-- [ ] `_calculate_counts()` → yüzde aralıklarını tam sayıya çevir
-- [ ] `_filter_questions()` → seviye + tag filtresi + `Q(org=None) | Q(org=teacher.org)`
-- [ ] `_validate_counts()` → yetersiz soru varsa anlamlı hata fırlat
-- [ ] `_sample_questions()` → `random.sample` ile rastgele çek, tekrar yok
-- [ ] `generate()` → hepsini orkestre et, `Exam` oluştur ve döndür
+- [ ] Create `ExamGeneratorService` class, accept `teacher` and `params` in constructor
+- [ ] `_calculate_counts()` → convert percentage ranges to exact counts
+- [ ] `_filter_questions()` → level + tag filter + `Q(org=None) | Q(org=teacher.org)`
+- [ ] `_validate_counts()` → raise meaningful error if not enough questions
+- [ ] `_sample_questions()` → draw randomly with `random.sample`, no duplicates
+- [ ] `generate()` → orchestrate all above, create and return `Exam` instance
 
-### 4.3 Form
-- [ ] `ExamGenerationForm` yaz:
-  - Toplam soru sayısı
-  - Her seviye için min/max yüzde alanları
-  - Tag çoklu seçim
+### 5.3 Form
+- [ ] Write `ExamGenerationForm`:
+  - Total question count
+  - Min/max percentage fields per level
+  - Multi-select tags
 
-### 4.4 Views
-- [ ] `ExamCreateView` yaz: form geçerliyse `ExamGeneratorService.generate()` çağır
-- [ ] `ExamPreviewView` yaz: sınavı göster, yazdır butonu
-- [ ] `ExamHistoryView` yaz: `OrgFilterMixin` ile sadece kendi org sınavları
-- [ ] URL'leri bağla
+### 5.4 Views
+- [ ] Write `ExamCreateView`: call `ExamGeneratorService.generate()` if form is valid
+- [ ] Write `ExamPreviewView`: display exam, print button
+- [ ] Write `ExamHistoryView`: only own org exams via `OrgFilterMixin`
+- [ ] Wire up URLs
 
-### 4.5 Template'ler
-- [ ] `exams/create.html` — form sayfası
-- [ ] `exams/preview.html` — sınav önizleme + yazdır butonu
-- [ ] `exams/history.html` — geçmiş sınavlar listesi
+### 5.5 Templates
+- [ ] `exams/create.html` — form page
+- [ ] `exams/preview.html` — exam preview + print button
+- [ ] `exams/history.html` — past exams list
 
-**Kontrol:** Sınav oluştur, preview'da tüm sorular görünsün. Yetersiz soru durumunda hata mesajı çıksın. Başka org sınavı URL'den erişilemesin.
-
----
-
-## Aşama 5 — `dashboard/` Uygulaması
-
-- [ ] `dashboard` app'ini oluştur (models.py yok, migration yok)
-- [ ] `DashboardHomeView` yaz: son 5 sınav + toplam sınav sayısı istatistiği
-- [ ] `ProfileView` yaz: kullanıcı bilgileri read-only
-- [ ] URL'leri bağla: `/dashboard/`, `/dashboard/profile/`
-- [ ] `templates/dashboard/home.html` yaz
-- [ ] `templates/dashboard/profile.html` yaz
-- [ ] `base.html` nav'ına soru bankası ve sınav oluştur linklerini ekle
-
-**Kontrol:** Dashboard'da son sınavlar görünsün. Nav linkleri doğru çalışsın.
+**Check:** Create an exam, all questions visible in preview. Error message shown when not enough questions. Another org's exam is inaccessible via URL.
 
 ---
 
-## Aşama 6 — Polish & Deploy Hazırlığı
+## Stage 6 — `dashboard/` App
 
-### Genel Template
-- [ ] `templates/base.html` — Bootstrap 5 navbar, footer, block yapısı
+- [ ] Create `dashboard` app (no models.py, no migrations)
+- [ ] Write `DashboardHomeView`: last 5 exams + total exam count stat + student count
+- [ ] Write `ProfileView`: read-only user info
+- [ ] Wire up URLs: `/dashboard/`, `/dashboard/profile/`
+- [ ] Write `templates/dashboard/home.html`
+- [ ] Write `templates/dashboard/profile.html`
+- [ ] Add question bank and create exam links to `base.html` nav
+
+**Check:** Recent exams visible on dashboard. Nav links work correctly.
+
+---
+
+## Stage 7 — `org/` App
+
+> Org Admin panel. No models — reads from other apps.
+
+- [ ] Create `org` app (no models.py, no migrations)
+- [ ] Write `OrgDashboardView`: teacher count, question count, exam count, student count for the org
+- [ ] Write `TeacherListView`: all teachers in org
+- [ ] Write `TeacherCreateView`: create User with `role=teacher`, same org as org_admin
+- [ ] Write `TeacherDetailView`: teacher info + their questions + their students
+- [ ] Write `OrgQuestionListView`: all questions in org
+- [ ] Write `OrgQuestionUpdateView`: org_admin can edit any question in their org
+- [ ] Write `OrgExamListView`: all exams in org
+- [ ] Write `OrgStudentListView`: all students in org
+- [ ] Wire up URLs: `/org/`, `/org/teachers/`, `/org/questions/`, `/org/exams/`, `/org/students/`
+- [ ] Write templates
+
+**Check:** Org Admin can add a teacher. Org Admin can edit any question in their org. Org Admin cannot access another org's data.
+
+---
+
+## Stage 8 — Polish & Deploy Prep
+
+### General Templates
+- [ ] `templates/base.html` — Bootstrap 5 navbar, footer, block structure
 - [ ] `templates/404.html`, `templates/500.html`
-- [ ] Flash mesajları (Django messages framework) base.html'e ekle
+- [ ] Add Django messages framework flash messages to base.html
 
-### Statik Dosyalar
-- [ ] WhiteNoise ayarlarını `base.py`'a ekle
-- [ ] `python manage.py collectstatic` hatasız geçsin
+### Static Files
+- [ ] Add WhiteNoise settings to `base.py`
+- [ ] `python manage.py collectstatic` passes without errors
 
-### Güvenlik & Production
-- [ ] `production.py`'da CSRF, SESSION, SECURE ayarlarını yap
-- [ ] `nginx.conf` yaz
-- [ ] `docker-compose.prod.yml` yaz
-- [ ] `.env` değişkenlerini dokümante et
+### Security & Production
+- [ ] Set CSRF, SESSION, SECURE settings in `production.py`
+- [ ] Write `nginx.conf`
+- [ ] Write `docker-compose.prod.yml`
+- [ ] Document `.env` variables
 
-### Son Kontroller
-- [ ] Tüm view'larda login_required veya mixin var mı?
-- [ ] Teacher başka org'un sınavına / sorusuna URL'den erişemiyor mu?
-- [ ] `is_active=False` sorular sınava girmiyor mu?
-- [ ] `python manage.py check --deploy` uyarısız geçsin
+### Final Checks
+- [ ] All views have login_required or a mixin?
+- [ ] Teacher cannot access another org's exams/questions via URL?
+- [ ] Org Admin cannot access another org's data via URL?
+- [ ] `is_active=False` questions never included in exam generation?
+- [ ] `python manage.py check --deploy` passes without warnings?
 
 ---
 
-## Özet Tablo
+## Summary Table
 
-| Aşama | İçerik | Bağımlılık |
+| Stage | Content | Depends On |
 |---|---|---|
-| 0 | Proje kurulumu | — |
+| 0 | Project setup | — |
 | 1 | `accounts/` | 0 |
 | 2 | `core/` | 1 |
 | 3 | `questions/` | 1, 2 |
-| 4 | `exams/` | 1, 2, 3 |
-| 5 | `dashboard/` | 1, 4 |
-| 6 | Polish & Deploy | 1–5 |
+| 4 | `students/` | 1, 2 |
+| 5 | `exams/` | 1, 2, 3, 4 |
+| 6 | `dashboard/` | 1, 5 |
+| 7 | `org/` | 1, 3, 5, 4 |
+| 8 | Polish & Deploy | 1–7 |
+
+# NOTES 
+## DUZENLENECEK
+- [ ] **NOT:** `role` teacher veya org_admin olarak kaydedilince `user permissions` otomatik atansın — signal veya `save()` override ile yapılacak, mixin'ler tamamlandıktan sonra
