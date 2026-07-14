@@ -80,11 +80,11 @@ Project setup
 > Shared tools used by other apps. Write early so they're ready for later stages.
 
 - [x] Create `core` app (no migrations folder — specify in `AppConfig`)
-- [ ] Write `OrgFilterMixin`: filter querysets by `request.user.organization`
-- [ ] Write `user_role_context` context processor: inject `role` into every template
-- [ ] Add context processor to `settings/base.py`
-- [ ] Create `core/templatetags/` folder
-- [ ] Write `active_nav` template tag: add Bootstrap `active` class to active nav link
+- [x] Write `OrgFilterMixin`: filter querysets by `request.user.organization`
+- [x] Write `user_role_context` context processor: inject `role` into every template
+- [x] Add context processor to `settings/base.py`
+- [x] Create `core/templatetags/` folder
+- [x] Write `active_nav` template tag: add Bootstrap `active` class to active nav link
 
 **Check:** Writing `{{ role }}` in any template returns the correct value.
 
