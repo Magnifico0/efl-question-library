@@ -10,8 +10,8 @@ A Django web application for English language schools. Teachers log in and gener
 
 | App | Status |
 |-----|--------|
-| `accounts/` | 🔧 In progress |
-| `questions/` | ⬜ Not started |
+| `accounts/` | ✅ Done |
+| `questions/` | 🔧 In progress |
 | `exams/` | ⬜ Not started |
 | `dashboard/` | ⬜ Not started |
 | `org/` | ⬜ Not started |

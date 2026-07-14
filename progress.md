@@ -93,17 +93,17 @@ Project setup
 ## Stage 3 — `questions/` App
 
 ### 3.1 Models
-- [ ] Create `questions` app
-- [ ] Write `TagCategory` model: `name`
-- [ ] Write `Tag` model: `name`, `category` FK
-- [ ] Write `Question` model:
+- [x] Create `questions` app
+- [x] Write `TagCategory` model: `name`
+- [x] Write `Tag` model: `name`, `category` FK
+- [x] Write `Question` model:
   - `level` → `CharField(choices=[A1, A2, B1, B2, C1, C2])`
   - `text`, `image` (Pillow), `is_active`
   - `tags` → M2M (Tag)
   - `organization` → `ForeignKey(Organization, null=True, blank=True)`
   - `created_by` → `ForeignKey(User, null=True, blank=True)`
-- [ ] Write `Choice` model: `question` FK, `text`, `is_correct`
-- [ ] Create and apply migration
+- [x] Write `Choice` model: `question` FK, `text`, `is_correct`
+- [x] Create and apply migration
 
 ### 3.2 Admin (Global Questions)
 - [ ] Write `ChoiceInline` (inline choice entry inside Question admin)
