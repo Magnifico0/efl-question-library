@@ -17,7 +17,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, HttpResponseForbidden
+
+def dashboard_placeholder(request):
+    if not request.user.is_authenticated or request.user.role != "teacher":
+        return HttpResponseForbidden("Erişim engellendi")
+    return HttpResponse("Dashboard - yakında")
+
+
+def org_placeholder(request):
+    if not request.user.is_authenticated or request.user.role != "org_admin":
+        return HttpResponseForbidden("Erişim engellendi")
+    return HttpResponse("Org Admin - yakında")
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", include("accounts.urls")), 
+    path("", include("accounts.urls")),
+    path("dashboard/", dashboard_placeholder), #temporary 
+    path("org/", org_placeholder), #temporary 
 ]

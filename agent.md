@@ -264,8 +264,10 @@ Algorithm flow (`exams/services.py`):
 
 | File | Content |
 |------|---------|
+| `apps.py` | to be able to add INSTALLED_APPS in config/settings|
 | `mixins.py` | `OrgFilterMixin` — filters querysets by `request.user.organization` |
 | `context_processors.py` | `user_role_context` — injects `role` into every template context |
+| `templatetags/__init__.py` | empty file, to define as python package |
 | `templatetags/core_tags.py` | `active_nav` — marks active nav link with Bootstrap `active` class |
 
 ---

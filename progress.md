@@ -64,12 +64,12 @@ Project setup
 - [x] Wire up URLs: `/login/`, `/logout/`
 
 ### 1.4 Mixins
-- [ ] Write `TeacherRequiredMixin`
-- [ ] Write `OrgAdminRequiredMixin`
-- [ ] Write `AdminRequiredMixin`
+- [x] Write `TeacherRequiredMixin`
+- [x] Write `OrgAdminRequiredMixin`
+- [x] Write `AdminRequiredMixin`
 
 ### 1.5 Template
-- [ ] Write `templates/accounts/login.html` (Bootstrap 5)
+- [x] Write `templates/accounts/login.html` (Bootstrap 5)
 
 **Check:** Login as admin, org_admin, and teacher — each redirects to the correct page. Visiting `/dashboard/` without login redirects to `/login/`.
 
@@ -79,7 +79,7 @@ Project setup
 
 > Shared tools used by other apps. Write early so they're ready for later stages.
 
-- [ ] Create `core` app (no migrations folder — specify in `AppConfig`)
+- [x] Create `core` app (no migrations folder — specify in `AppConfig`)
 - [ ] Write `OrgFilterMixin`: filter querysets by `request.user.organization`
 - [ ] Write `user_role_context` context processor: inject `role` into every template
 - [ ] Add context processor to `settings/base.py`
