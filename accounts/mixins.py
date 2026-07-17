@@ -31,3 +31,15 @@ class AdminRequiredMixin:
         if request.user.role !="admin":
             return redirect("/login/")
         return super().dispatch(request,*args,**kwargs)
+    
+
+class ContributorRequiredMixin: 
+    """
+    check for is the user contributor
+    """
+    def dispatch(self,request,*args,**kwargs):
+        if not request.user.is_authenticated: 
+            return redirect("/login/")
+        if request.user.role !="contributor":
+            return redirect("/login/")
+        return super().dispatch(request,*args,**kwargs)

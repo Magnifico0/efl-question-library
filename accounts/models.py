@@ -18,6 +18,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):  #user role 
         ADMIN = "admin", "Admin"
         ORG_ADMIN = "org_admin", "Organization Admin"
+        CONTRIBUTOR  = "contributor","Contributor"
         TEACHER = "teacher", "Teacher"
         #for python = "written in db ", "display in admin and form"
     #USER CLASS 

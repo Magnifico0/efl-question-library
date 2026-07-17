@@ -1,0 +1,78 @@
+{% extends "base.html" %} <!-- En üst satırda kalmalı, base.css ve base.js otomatik miras alınır -->
+{% load static %}
+
+{% block title %}Sorularım{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Sorularım</h1>
+    <!-- URL ismini agent.md'deki standartlara göre güncelledik (Hata alırsan eski haline getirebilirsin) -->
+    <a href="{% url 'questions:create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i> Yeni Soru
+    </a>
+  </div>
+
+  <!-- object_list veya questions listesinden hangisi doluysa onu kontrol ediyoruz -->
+  {% if object_list or questions %}
+    <div class="table-responsive card border-0 shadow-sm">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Soru</th>
+            <th>Seviye</th>
+            <th>Etiketler</th>
+            <th>Durum</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for question in object_list|default:questions %}
+          <tr>
+            <td class="fw-medium text-dark">{{ question.text|truncatechars:60 }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ question.level }}</span>
+            </td>
+            <td>
+              {% for tag in question.tags.all %}
+                <span class="badge bg-light text-dark border">{{ tag.name }}</span>
+              {% empty %}
+                <span class="text-muted">—</span>
+              {% endfor %}
+            </td>
+            <td>
+              {% if question.is_active %}
+                <span class="badge bg-success">Aktif</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Taslak</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <!-- URL ismini agent.md'deki standartlara göre güncelledik -->
+              <a href="{% url 'questions:update' question.pk %}" 
+                 class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i> Düzenle
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  {% else %}
+    <!-- Boş durum — kullanıcıya ne yapacağını söyleyen şık bir kart -->
+    <div class="text-center py-5 card border-0 shadow-sm bg-white">
+      <div class="mb-3">
+        <i class="bi bi-journal-x fs-1 text-muted"></i>
+      </div>
+      <p class="mb-3 text-muted">Henüz soru eklemediniz.</p>
+      <a href="{% url 'questions:create' %}" class="btn btn-primary">
+        İlk Soruyu Ekle
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

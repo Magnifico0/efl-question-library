@@ -52,6 +52,17 @@ class Question(models.Model):
         null= True,
         blank=True,  
     )
+    audio = models.FileField(
+        upload_to="questions/audio/",
+        null=True,
+        blank=True,
+    )
+    audio_label = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        help_text="Örn: Part1 - Track 2 - sadece sınav çıktısında görünür. "
+    )
     is_active = models.BooleanField(default=True)
     tags = models.ManyToManyField(
         Tag,

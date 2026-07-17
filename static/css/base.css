@@ -1,0 +1,73 @@
+/* Color Palette & Global Variables */
+:root {
+    --primary-color: #1e3a8a;       /* Dark Indigo */
+    --primary-hover: #172554;
+    --accent-color: #f59e0b;        /* Soft Amber */
+    --dark-bg: #0f172a;             /* Slate 900 */
+    --light-bg: #f8fafc;            /* Slate 50 */
+    --text-main: #334155;           /* Slate 700 */
+    --border-soft: #e2e8f0;         /* Slate 200 */
+}
+
+/* Base Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    background-color: var(--light-bg);
+}
+
+.bg-dark-blue {
+    background-color: var(--dark-bg) !important;
+}
+
+/* User Profile Avatar Icon in Nav */
+.avatar-circle {
+    width: 28px;
+    height: 28px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Custom UI Polish */
+.card {
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.fs-7 { font-size: 0.875rem; }
+.fs-8 { font-size: 0.75rem; }
+.text-light-muted { color: #94a3b8; }
+.uppercase { text-transform: uppercase; }
+
+/* Custom Scrollbar for nicer presentation */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

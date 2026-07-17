@@ -106,17 +106,19 @@ Project setup
 - [x] Create and apply migration
 
 ### 3.2 Admin (Global Questions)
-- [ ] Write `ChoiceInline` (inline choice entry inside Question admin)
-- [ ] Write `QuestionAdmin`: level / tag / is_active / organization filters
-- [ ] Write `TagAdmin` and `TagCategoryAdmin`
-- [ ] Add a few sample questions via admin (for testing)
+- [x] Write `ChoiceInline` (inline choice entry inside Question admin)
+- [x] Write `QuestionAdmin`: level / tag / is_active / organization filters
+- [x] Write `TagAdmin` and `TagCategoryAdmin`
+- [x] Add a few sample questions via admin (for testing)
 
 ### 3.3 Teacher-Facing Views (Org-Scoped Questions)
-- [ ] Write `QuestionForm`: `organization` and `created_by` fields **not in form**
+- [x] Write `QuestionForm`: `organization` and `created_by` fields **not in form**
+- [x] Write `ChoiceForm` and `ChoiceFormSet`: inline choice entry for teacher-facing question form
 - [ ] Write `QuestionListView`: only questions where `created_by=request.user`
 - [ ] Write `QuestionCreateView`:
   - Set `organization` and `created_by` automatically in `form_valid()`
   - Use `TeacherRequiredMixin`
+  - Handle `ChoiceFormSet` inline (min 2 choices required, no choices → is_active=False)
 - [ ] Write `QuestionUpdateView`: teacher can only edit their own questions
 - [ ] Wire up URLs: `/questions/`, `/questions/add/`, `/questions/<id>/edit/`
 - [ ] Write templates: list and form pages

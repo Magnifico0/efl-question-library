@@ -36,4 +36,5 @@ urlpatterns = [
     path("", include("accounts.urls")),
     path("dashboard/", dashboard_placeholder), #temporary 
     path("org/", org_placeholder), #temporary 
+    path("questions/",include("questions.urls"), name="questions"),
 ]

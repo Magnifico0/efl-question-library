@@ -35,6 +35,8 @@ def role_redirect(user):
         return redirect("/admin/")
     elif user.role == "org_admin":
         return redirect("/org/")
+    elif user.role == "contributor":
+        return redirect("/questions/")
     else:
         return redirect("/dashboard/")
 

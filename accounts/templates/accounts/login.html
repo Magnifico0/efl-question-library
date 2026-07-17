@@ -1,0 +1,47 @@
+{% extends "base.html" %} 
+{% load static %}
+
+{% block title %}Giriş Yap{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <h2 class="login-title">Giriş Yap</h2>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Kullanıcı Adı</label>
+                {{ form.username }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Şifre</label>
+                <div class="password-wrapper">
+                    {{ form.password }}
+                    <span id="togglePassword">Şifreyi Göster</span>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Giriş Yap</button>
+        </form>
+    </div>
+    
+    {% if role %}
+        <p class="mt-3 text-center text-muted fs-7">Role : {{ role }}</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- base.js zaten miras alındığı için buraya SADECE login.js yazıyoruz -->
+    <script src="{% static 'js/login.js' %}"></script>
+{% endblock %}

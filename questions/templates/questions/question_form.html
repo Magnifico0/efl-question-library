@@ -1,0 +1,165 @@
+<!-- questions/templates/questions/question_form.html -->
+{% extends "base.html" %}
+
+{% block title %}
+  {% if object %}Soruyu Düzenle{% else %}Yeni Soru{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <h1 class="h3 mb-4">
+        {% if object %}Soruyu Düzenle{% else %}Yeni Soru Ekle{% endif %}
+      </h1>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- SORU FORMU -->
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Soru Bilgileri</div>
+          <div class="card-body">
+
+            <!-- Seviye -->
+            <div class="mb-3">
+              <label class="form-label">Seviye</label>
+              {{ form.level }}
+              {% if form.level.errors %}
+                <div class="text-danger small">{{ form.level.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Soru metni -->
+            <div class="mb-3">
+              <label class="form-label">Soru Metni</label>
+              {{ form.text }}
+              {% if form.text.errors %}
+                <div class="text-danger small">{{ form.text.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Görsel (opsiyonel) -->
+            <div class="mb-3">
+              <label class="form-label">Görsel <span class="text-muted">(opsiyonel)</span></label>
+              {{ form.image }}
+              {% if object.image %}
+                <div class="mt-2">
+                  <small class="text-muted">Mevcut görsel: {{ object.image.name }}</small>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Ses dosyası (opsiyonel) -->
+            <div class="mb-3">
+              <label class="form-label">Ses Dosyası <span class="text-muted">(opsiyonel)</span></label>
+              {{ form.audio }}
+              {% if object.audio %}
+                <div class="mt-2">
+                  <audio controls src="{{ object.audio.url }}" class="w-100"></audio>
+                  <small class="text-muted d-block mt-1">Mevcut: {{ object.audio.name }}</small>
+                </div>
+              {% endif %}
+            </div>
+            <!-- Ses etiketi (opsiyonel) -->
+            <div class="mb-3">
+              <label class="form-label">Ses Etiketi <span class="text-muted">(opsiyonel, örn. "Part 1")</span></label>
+              {{ form.audio_label }}
+              {% if form.audio_label.errors %}
+                <div class="text-danger small">{{ form.audio_label.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Etiketler -->
+            <div class="mb-3">
+              <label class="form-label">Etiketler</label>
+              <div class="d-flex flex-wrap gap-2">
+                {{ form.tags }}
+              </div>
+              {% if form.tags.errors %}
+                <div class="text-danger small">{{ form.tags.errors }}</div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ŞIKLAR — inline formset -->
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Şıklar</div>
+          <div class="card-body">
+
+            <!--
+              management_form ZORUNLU — Django formset'in kaç form
+              gönderildiğini buradan anlar. Olmadan POST hata verir.
+            -->
+            {{ choice_formset.management_form }}
+
+            <div id="choice-forms">
+              {% for choice_form in choice_formset %}
+              <div class="choice-row border rounded p-3 mb-2 {% if choice_form.instance.pk %}bg-light{% endif %}">
+                <div class="row align-items-center g-2">
+
+                  <div class="col-8 col-md-9">
+                    {{ choice_form.text }}
+                    {% if choice_form.text.errors %}
+                      <div class="text-danger small">{{ choice_form.text.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-auto">
+                    <div class="form-check">
+                      {{ choice_form.is_correct }}
+                      <label class="form-check-label">Doğru</label>
+                    </div>
+                  </div>
+
+                  <!-- Şık silme (sadece kayıtlı şıklarda göster) -->
+                  {% if choice_form.instance.pk %}
+                  <div class="col-auto">
+                    <div class="form-check">
+                      {{ choice_form.DELETE }}
+                      <label class="form-check-label text-danger small">Sil</label>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                  <!-- Formset hidden field'ları — Django'nun iç işleyişi için zorunlu -->
+                  {{ choice_form.id }}
+
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <p class="text-muted small mt-2">
+              En az 2 şık girilmesi gerekir. Şık girilmeden soru taslak olarak kaydedilir.
+            </p>
+
+          </div>
+        </div>
+
+        <!-- Aktif mi? -->
+        <div class="mb-4">
+          <div class="form-check">
+            {{ form.is_active }}
+            <label class="form-check-label">
+              Aktif (soru havuzuna ekle)
+            </label>
+          </div>
+          <div class="form-text text-muted">
+            Şık girilmeden aktif edilse de sistem şık kontrolü yapar.
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <a href="{% url 'questions:list' %}" class="btn btn-outline-secondary">İptal</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

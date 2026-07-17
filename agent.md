@@ -213,9 +213,7 @@ Algorithm flow (`exams/services.py`):
 | `models.py` | `TagCategory`, `Tag`, `Question` (organization + created_by FK), `Choice` |
 | `admin.py` | `ChoiceInline`, `QuestionAdmin` (level/tag/is_active/organization filters), `TagAdmin`, `TagCategoryAdmin` |
 | `views.py` | `QuestionListView`, `QuestionCreateView`, `QuestionUpdateView` (teacher-only, org-scoped, own questions only) |
-| `forms.py` | `QuestionForm` (organization and created_by excluded — set automatically in view) |
-
----
+| `forms.py` | `QuestionForm`, `ChoiceForm`, `ChoiceFormSet` (organization and created_by excluded from QuestionForm — set automatically in view) |
 
 ### `exams/`
 **Purpose:** Exam generation algorithm and exam history.
@@ -336,3 +334,13 @@ settings/
 - `role=org_admin` kaydedilince org_admin izinleri otomatik atanacak
 - Elle seçim yapılmayacak — signal veya `save()` override ile çözülecek
 - Mixin'ler tamamlandıktan sonra hangi izinlerin gerekli olduğu netleşecek
+
+öğretmen sınav 
+
+#### Değişiklikler 
+- Öğretmenler kendi sorularını eklemeyecekler 
+- Soruları sadece contibutor'lar ekleyecek (mali buğra vs )
+- Ses kısmı eklenecek (listening)
+- Organizations kısmı altında teachers bağlı olmasına gerek yok ama her öğretmen için ekleyebiliriz bir noktada kullandıkları soruları
+index olarak tutup aynı hocaya aynı soru denk gelmemesi için 
+- yani contibutor eklenecek soruları ekleyen kişiler için olacak, teacher soru ekleyemeyecek students adı altında sınav takip sistemleri olmayacak teacherlar sadece soruları çekip pdf olarak indirebilecek ek olarak ses kısmı için indirme kısmı eklenecek veya link çıkacak 
