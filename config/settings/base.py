@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig', #accounts app 
     'core.apps.CoreConfig', #core app 
     'questions.apps.QuestionsConfig', #questions app 
+    'exams.apps.ExamsConfig', #exams app 
 ]
 AUTH_USER_MODEL = 'accounts.User'
 

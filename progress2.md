@@ -160,9 +160,10 @@ Project setup
 > Write independently from views. Must be testable.
 
 - [ ] Create `ExamGeneratorService` class, accept `teacher` and `params` in constructor
-- [ ] `_calculate_counts()` → convert percentage ranges to exact counts
+- [ ] `_calculate_counts()` → validate per-level exact counts sum to total (no percentage conversion — counts come in exact from the form)  
+
 - [ ] `_filter_questions()` → level + tag filter + `Q(org=None) | Q(org=teacher.org)` + exclude teacher's index
-- [ ] `_validate_counts()` → raise meaningful error if not enough questions
+- [ ] `_validate_counts()` →  raise meaningful error if not enough questions
 - [ ] `_sample_questions()` → draw randomly with `random.sample`, no duplicates
 - [ ] `_update_index()` → add selected question IDs to `TeacherQuestionIndex` for this teacher
 - [ ] `generate()` → orchestrate all above, create and return `Exam` instance
@@ -170,7 +171,8 @@ Project setup
 ### 4.3 Form
 - [ ] Write `ExamGenerationForm`:
   - Total question count
-  - Min/max percentage fields per level
+  - Exact question count per level (6 inputs, one per CEFR level A1–C2)
+  - JS live-validation: running sum of level counts must not exceed total; show remaining count as teacher types
   - Multi-select tags
 
 ### 4.4 Views

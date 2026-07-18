@@ -119,8 +119,9 @@ Questions may include an audio file for listening exercises. `audio` is a `FileF
 {
   "total": 20,
   "levels": {
-    "B1": {"min": 40, "max": 60},
-    "B2": {"min": 20, "max": 40}
+    "B1": 8,
+    "B2": 6,
+    "C1": 6
   },
   "tags": [3, 7]
 }
@@ -162,10 +163,9 @@ All questions use the same model. Type is determined by tags:
 ---
 
 ## Exam Generation Logic
-Teacher inputs: total question count + per-level min/max percentage ranges + optional tag filters.
-
+Teacher inputs: total question count + exact per-level question counts (must sum to total) + optional tag filters.
 Algorithm flow (`exams/services.py`):
-1. `_calculate_counts()` — convert ratio inputs into exact per-level question counts
+1. `_calculate_counts()` - validate that per-level counts sum to the total (counts are already exact, entered directly by the teacher)
 2. `_filter_questions()` — apply level + tag filters; global questions (org=None) + teacher's org questions combined. **Exclude questions already in the teacher's index:**
    ```python
    used_ids = TeacherQuestionIndex.objects.filter(teacher=teacher).values_list('question_id', flat=True)
@@ -238,7 +238,7 @@ After generating an exam, teachers can download it as a PDF:
 | `models.py` | `Exam`, `TeacherQuestionIndex` |
 | `services.py` | `ExamGeneratorService` — full algorithm including index update |
 | `views.py` | `ExamCreateView`, `ExamPreviewView`, `ExamDownloadView` (PDF), `ExamHistoryView` |
-| `forms.py` | `ExamGenerationForm` (total count, per-level min/max, tag selection) |
+| `forms.py` | `ExamGenerationForm` (total question count, Exact question count per level (6 inputs, one per CEFR level, JS-validated to sum to total), Multi-select tags) |
 
 > **Added:** `TeacherQuestionIndex` model and `ExamDownloadView`.
 
