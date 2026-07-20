@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig', #core app 
     'questions.apps.QuestionsConfig', #questions app 
     'exams.apps.ExamsConfig', #exams app 
+    'dashboard.apps.DashboardConfig', #dashboards app 
+    'org.apps.OrgConfig' #org app 
 ]
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -65,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.user_role_context', #context processor
+
             ],
         },
     },

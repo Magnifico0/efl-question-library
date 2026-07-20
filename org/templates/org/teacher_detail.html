@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Öğretmen Detayı{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 mb-4">{{ teacher.get_full_name }}</h1>
+
+  <div class="card border-0 shadow-sm mb-4" style="max-width: 500px;">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Kullanıcı Adı</dt>
+        <dd class="col-sm-8">{{ teacher.username }}</dd>
+        <dt class="col-sm-4">E-posta</dt>
+        <dd class="col-sm-8">{{ teacher.email|default:"—" }}</dd>
+      </dl>
+    </div>
+  </div>
+
+  <h2 class="h5 mb-3">Ürettiği Sınavlar</h2>
+  {% if exams %}
+  <div class="table-responsive card border-0 shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Toplam Soru</th>
+          <th>Tarih</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exam in exams %}
+        <tr>
+          <td>{{ exam.pk }}</td>
+          <td>{{ exam.parameters.total }}</td>
+          <td>{{ exam.created_at|date:"d.m.Y H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted">Bu öğretmen henüz sınav üretmedi.</p>
+  {% endif %}
+
+  <a href="{% url 'org:teacher_list' %}" class="btn btn-outline-secondary mt-4">Geri Dön</a>
+</div>
+{% endblock %}

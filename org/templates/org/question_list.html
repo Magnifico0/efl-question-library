@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Sorular{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 mb-4">Erişilebilir Sorular</h1>
+
+  {% if questions %}
+  <div class="table-responsive card border-0 shadow-sm">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Soru</th>
+          <th>Seviye</th>
+          <th>Ekleyen</th>
+          <th>Durum</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for question in questions %}
+        <tr>
+          <td>{{ question.text|truncatechars:60 }}</td>
+          <td><span class="badge bg-secondary">{{ question.level }}</span></td>
+          <td>{{ question.created_by.get_full_name|default:"—" }}</td>
+          <td>
+            {% if question.is_active %}
+              <span class="badge bg-success">Aktif</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Taslak</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted">Erişilebilir soru bulunamadı.</p>
+  {% endif %}
+</div>
+{% endblock %}

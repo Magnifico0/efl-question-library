@@ -1,10 +1,67 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Sınav Oluştur{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/exams.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-  <h1 class="h3 mb-4">Yeni Sınav Oluştur</h1>
-  <!-- ExamGenerationForm buraya gelecek -->
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+
+      <h1 class="h3 mb-4">Yeni Sınav Oluştur</h1>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Genel</div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">Toplam Soru Sayısı</label>
+              {{ form.total }}
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Seviyelere Göre Soru Sayısı</div>
+          <div class="card-body">
+            {% for field in form %}
+              {% if field.name|slice:":6" == "level_" %}
+                <div class="level-row">
+                  <label>{{ field.label }}</label>
+                  {{ field }}
+                </div>
+              {% endif %}
+            {% endfor %}
+            <div id="remaining-display"></div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Etiketler</div>
+          <div class="card-body">
+            {{ form.tags }}
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn" class="btn btn-primary">Sınavı Oluştur</button>
+        <a href="{% url 'exams:history' %}" class="btn btn-outline-secondary">İptal</a>
+      </form>
+
+    </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/exam_create.js' %}"></script>
 {% endblock %}

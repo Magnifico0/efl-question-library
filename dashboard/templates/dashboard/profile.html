@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="h3 mb-4">Profilim</h1>
+  <div class="card border-0 shadow-sm" style="max-width: 500px;">
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-4">Ad Soyad</dt>
+        <dd class="col-sm-8">{{ user_obj.get_full_name }}</dd>
+
+        <dt class="col-sm-4">Kullanıcı Adı</dt>
+        <dd class="col-sm-8">{{ user_obj.username }}</dd>
+
+        <dt class="col-sm-4">Organizasyon</dt>
+        <dd class="col-sm-8">{{ user_obj.organization.name|default:"—" }}</dd>
+
+        <dt class="col-sm-4">Rol</dt>
+        <dd class="col-sm-8">{{ user_obj.get_role_display }}</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+.level-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.level-row label {
+    width: 60px;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.level-row input {
+    max-width: 100px;
+}
+
+#remaining-display {
+    font-weight: 600;
+    margin: 12px 0;
+}
+
+#remaining-display.ok {
+    color: #198754;
+}
+
+#remaining-display.error {
+    color: #dc3545;
+}
+
+.question-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.choice-item {
+    padding: 4px 0;
+}
+
+.choice-letter {
+    font-weight: 700;
+    margin-right: 8px;
+}

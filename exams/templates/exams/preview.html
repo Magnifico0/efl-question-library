@@ -1,10 +1,52 @@
 {% extends "base.html" %}
+{% load static core_tags %}
 
 {% block title %}Sınav Önizleme{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/exams.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container py-4">
-  <h1 class="h3 mb-4">Sınav Önizleme</h1>
-  <!-- Sorular, şıklar, PDF indir butonu buraya gelecek -->
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Sınav #{{ exam.pk }}</h1>
+    <a href="{% url 'exams:download' exam.pk %}" class="btn btn-success">
+      <i class="bi bi-download me-1"></i> PDF İndir
+    </a>
+  </div>
+
+  <p class="text-muted">
+    Toplam {{ exam.parameters.total }} soru — {{ exam.created_at|date:"d.m.Y H:i" }}
+  </p>
+
+  {% for question in questions %}
+  <div class="question-card">
+    <p class="fw-semibold">
+      {{ forloop.counter }}. {{ question.text }}
+      <span class="badge bg-secondary">{{ question.level }}</span>
+    </p>
+
+    {% if question.image %}
+      <img src="{{ question.image.url }}" class="img-fluid mb-2" style="max-width: 300px;">
+    {% endif %}
+
+    {% if question.audio %}
+      <div class="mb-2">
+        {% if question.audio_label %}<small class="text-muted d-block">{{ question.audio_label }}</small>{% endif %}
+        <audio controls src="{{ question.audio.url }}"></audio>
+      </div>
+    {% endif %}
+
+    {% for choice in question.choices.all %}
+      <div class="choice-item">
+        <span class="choice-letter">{{ forloop.counter|to_letter }}.</span>
+        {{ choice.text }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
 </div>
 {% endblock %}

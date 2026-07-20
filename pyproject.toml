@@ -11,5 +11,6 @@ dependencies = [
     "gunicorn>=25.3.0",
     "pillow>=12.2.0",
     "psycopg2-binary>=2.9.12",
+    "weasyprint>=69.0",
     "whitenoise>=6.12.0",
 ]

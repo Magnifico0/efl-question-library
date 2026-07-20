@@ -140,36 +140,37 @@ Project setup
 ## Stage 4 — `exams/` App
 
 > **Değişiklik:** `students/` app kaldırıldı, bu nedenle ExamResult bağımlılığı yok. `TeacherQuestionIndex` bu app'e eklendi.
+"Admin" adımı yoktu (hiçbir rol Django admin panelinden elle sınav oluşturmuyor). Yine de exams/admin.py debug/gözlem amaçlı eklendi — tek admin kullanıcı, kendi test sürecinde Exam ve TeacherQuestionIndex kayıtlarını incelemek için kullanacak, iş akışının zorunlu bir parçası değil.
 
 ### 4.1 Models
-- [ ] Create `exams` app
-- [ ] Write `Exam` model:
+- [x] Create `exams` app
+- [x] Write `Exam` model:
   - `teacher` FK (User)
   - `organization` FK (Organization)
   - `parameters` JSONField
   - `questions` M2M (Question)
   - `created_at`
-- [ ] Write `TeacherQuestionIndex` model:
+- [x] Write `TeacherQuestionIndex` model:
   - `teacher` FK (User)
   - `question` FK (Question)
   - `used_at` DateTimeField (auto_now_add=True)
   - `Meta: unique_together = ('teacher', 'question')`
-- [ ] Create and apply migration
+- [x] Create and apply migration
 
 ### 4.2 Service Layer (`services.py`)
 > Write independently from views. Must be testable.
 
-- [ ] Create `ExamGeneratorService` class, accept `teacher` and `params` in constructor
-- [ ] `_calculate_counts()` → validate per-level exact counts sum to total (no percentage conversion — counts come in exact from the form)  
+- [x] Create `ExamGeneratorService` class, accept `teacher` and `params` in constructor
+- [x] `_calculate_counts()` → validate per-level exact counts sum to total (no percentage conversion — counts come in exact from the form)  
 
-- [ ] `_filter_questions()` → level + tag filter + `Q(org=None) | Q(org=teacher.org)` + exclude teacher's index
-- [ ] `_validate_counts()` →  raise meaningful error if not enough questions
-- [ ] `_sample_questions()` → draw randomly with `random.sample`, no duplicates
-- [ ] `_update_index()` → add selected question IDs to `TeacherQuestionIndex` for this teacher
-- [ ] `generate()` → orchestrate all above, create and return `Exam` instance
+- [x] `_filter_questions()` → level + tag filter + `Q(org=None) | Q(org=teacher.org)` + exclude teacher's index
+- [x] `_validate_counts()` →  raise meaningful error if not enough questions
+- [x] `_sample_questions()` → draw randomly with `random.sample`, no duplicates
+- [x] `_update_index()` → add selected question IDs to `TeacherQuestionIndex` for this teacher
+- [x] `generate()` → orchestrate all above, create and return `Exam` instance
 
 ### 4.3 Form
-- [ ] Write `ExamGenerationForm`:
+- [x] Write `ExamGenerationForm`:
   - Total question count
   - Exact question count per level (6 inputs, one per CEFR level A1–C2)
   - JS live-validation: running sum of level counts must not exceed total; show remaining count as teacher types

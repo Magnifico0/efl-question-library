@@ -33,17 +33,59 @@
 
                 <div class="collapse navbar-collapse" id="mainNavbar">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                        {% if user.role == 'contributor' %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'questions:list' %}">
                                 Question Bank
                             </a>
                         </li>
-
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'questions:create' %}">
                                 Add Question
                             </a>
                         </li>
+                        {% endif %}
+
+                        {% if user.role == 'teacher' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'dashboard:home' %}">
+                                Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exams:create' %}">
+                                Sınav Oluştur
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'exams:history' %}">
+                                Sınav Geçmişi
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% if user.role == 'org_admin' %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'org:dashboard' %}">
+                                Org Panel
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'org:teacher_list' %}">
+                                Öğretmenler
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'org:question_list' %}">
+                                Sorular
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'org:exam_list' %}">
+                                Sınavlar
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
 
                     
@@ -57,7 +99,7 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userDropdown">
                                 {% if user.role == 'teacher' %}
-                                    <li><a class="dropdown-menu-item dropdown-item py-2" href="{% url 'dashboard:ProfileView' %}"><i class="bi bi-person me-2"></i> Profile</a></li>
+                                    <li><a class="dropdown-menu-item dropdown-item py-2" href="{% url 'dashboard:profile' %}"><i class="bi bi-person me-2"></i> Profile</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                 {% endif %}
                                 <li>

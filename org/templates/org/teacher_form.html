@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Yeni Öğretmen{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-6">
+      <h1 class="h3 mb-4">Yeni Öğretmen Ekle</h1>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label">Kullanıcı Adı</label>
+          {{ form.username }}
+          {{ form.username.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ad</label>
+          {{ form.first_name }}
+          {{ form.first_name.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Soyad</label>
+          {{ form.last_name }}
+          {{ form.last_name.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">E-posta</label>
+          {{ form.email }}
+          {{ form.email.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Şifre</label>
+          {{ form.password1 }}
+          {{ form.password1.errors }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Şifre (Tekrar)</label>
+          {{ form.password2 }}
+          {{ form.password2.errors }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Kaydet</button>
+        <a href="{% url 'org:teacher_list' %}" class="btn btn-outline-secondary">İptal</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

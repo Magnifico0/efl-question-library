@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body { font-family: Arial, sans-serif; font-size: 12px; }
+    h1 { font-size: 18px; margin-bottom: 20px; }
+    .question { margin-bottom: 18px; page-break-inside: avoid; }
+    .question-text { font-weight: bold; margin-bottom: 6px; }
+    .choice { margin-left: 16px; }
+    .choice-letter { font-weight: bold; margin-right: 6px; }
+    .answer-key { page-break-before: always; }
+    .answer-key-item { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>Sınav #{{ exam.pk }} — Toplam {{ exam.parameters.total }} Soru</h1>
+
+{% for question in questions %}
+<div class="question">
+    <div class="question-text">
+        {{ forloop.counter }}. {{ question.text }}
+        {% if question.audio_label %}<em>({{ question.audio_label }})</em>{% endif %}
+    </div>
+    {% for choice in question.choices.all %}
+    <div class="choice">
+        <span class="choice-letter">{{ forloop.counter|add:64|stringformat:"c" }}.</span>
+        {{ choice.text }}
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="answer-key">
+    <h1>Cevap Anahtarı</h1>
+    {% for question in questions %}
+    <div class="answer-key-item">
+        {{ forloop.counter }}.
+        {% for choice in question.choices.all %}
+            {% if choice.is_correct %}{{ forloop.counter|add:64|stringformat:"c" }}{% endif %}
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

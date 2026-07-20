@@ -1,11 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Sınav Geçmişim{% endblock %}
+{% block title %}Sınavlar{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-
-  <h1 class="h3 mb-4">Sınav Geçmişim</h1>
+  <h1 class="h3 mb-4">Organizasyon Sınavları</h1>
 
   {% if exams %}
   <div class="table-responsive card border-0 shadow-sm">
@@ -13,30 +12,25 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
+          <th>Öğretmen</th>
           <th>Toplam Soru</th>
           <th>Tarih</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
         {% for exam in exams %}
         <tr>
           <td>{{ exam.pk }}</td>
+          <td>{{ exam.teacher.get_full_name|default:"—" }}</td>
           <td>{{ exam.parameters.total }}</td>
           <td>{{ exam.created_at|date:"d.m.Y H:i" }}</td>
-          <td class="text-end">
-            <a href="{% url 'exams:preview' exam.pk %}" class="btn btn-sm btn-outline-secondary">
-              Görüntüle
-            </a>
-          </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% else %}
-  <p class="text-muted">Henüz sınav oluşturmadınız.</p>
+  <p class="text-muted">Henüz sınav üretilmedi.</p>
   {% endif %}
-
 </div>
 {% endblock %}
