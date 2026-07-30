@@ -1,6 +1,6 @@
 <!-- questions/templates/questions/question_form.html -->
 {% extends "base.html" %}
-
+{% load static %}
 {% block title %}
   {% if object %}Soruyu Düzenle{% else %}Yeni Soru{% endif %}
 {% endblock %}
@@ -16,11 +16,37 @@
 
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if passage %}
+          <input type="hidden" name="passage" value="{{ passage.pk }}">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-1"></i>
+            Bu soru <strong>{{ passage.get_kind_display }}</strong> paragrafına bağlanıyor.
+            Seviye (<strong>{{ passage.level }}</strong>) ve bölüm paragraftan otomatik alınıyor, değiştirilemez.
+          </div>
+        {% endif %}
 
         <!-- SORU FORMU -->
         <div class="card mb-4">
           <div class="card-header fw-semibold">Soru Bilgileri</div>
           <div class="card-body">
+
+            <!-- Soru Tipi — her şeyi yönlendiren alan -->
+            <div class="mb-3">
+              <label class="form-label">Soru Tipi</label>
+              {{ form.question_type }}
+              {% if form.question_type.errors %}
+                <div class="text-danger small">{{ form.question_type.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Bölüm -->
+            <div class="mb-3">
+              <label class="form-label">Bölüm</label>
+              {{ form.section }}
+              {% if form.section.errors %}
+                <div class="text-danger small">{{ form.section.errors }}</div>
+              {% endif %}
+            </div>
 
             <!-- Seviye -->
             <div class="mb-3">
@@ -62,6 +88,7 @@
                 </div>
               {% endif %}
             </div>
+
             <!-- Ses etiketi (opsiyonel) -->
             <div class="mb-3">
               <label class="form-label">Ses Etiketi <span class="text-muted">(opsiyonel, örn. "Part 1")</span></label>
@@ -71,7 +98,7 @@
               {% endif %}
             </div>
 
-            <!-- Etiketler -->
+            <!-- Etiketler (artık sadece içerik sınıflandırması — Grammar, Vocabulary vb.) -->
             <div class="mb-3">
               <label class="form-label">Etiketler</label>
               <div class="d-flex flex-wrap gap-2">
@@ -82,18 +109,81 @@
               {% endif %}
             </div>
 
+            <!-- Fill in the Blank: Doğru Cevap (sadece question_type=fib iken görünür) -->
+            <div class="mb-3" id="fib-field" style="display: none;">
+              <label class="form-label">Doğru Cevap</label>
+              {{ form.correct_answer_text }}
+              {% if form.correct_answer_text.errors %}
+                <div class="text-danger small">{{ form.correct_answer_text.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Open Ended: Kelime Sayısı Talimatı (sadece question_type=open_ended iken görünür) -->
+            <div class="mb-3" id="open-ended-field" style="display: none;">
+              <label class="form-label">Kelime Sayısı Talimatı <span class="text-muted">(opsiyonel)</span></label>
+              {{ form.word_count_instruction }}
+              {% if form.word_count_instruction.errors %}
+                <div class="text-danger small">{{ form.word_count_instruction.errors }}</div>
+              {% endif %}
+            </div>
+
           </div>
         </div>
 
-        <!-- ŞIKLAR — inline formset -->
-        <div class="card mb-4">
+        <!-- MATCHING ÇİFTLERİ — inline formset (sadece question_type=matching iken görünür) -->
+        <div class="card mb-4" id="matching-section" style="display: none;">
+          <div class="card-header fw-semibold">Eşleştirme Çiftleri</div>
+          <div class="card-body">
+
+            {{ matching_formset.management_form }}
+
+            <div id="matching-forms">
+              {% for pair_form in matching_formset %}
+              <div class="matching-row border rounded p-3 mb-2 {% if pair_form.instance.pk %}bg-light{% endif %}">
+                <div class="row align-items-center g-2">
+
+                  <div class="col-5">
+                    {{ pair_form.left_text }}
+                    {% if pair_form.left_text.errors %}
+                      <div class="text-danger small">{{ pair_form.left_text.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-5">
+                    {{ pair_form.right_text }}
+                    {% if pair_form.right_text.errors %}
+                      <div class="text-danger small">{{ pair_form.right_text.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  {% if pair_form.instance.pk %}
+                  <div class="col-auto">
+                    <div class="form-check">
+                      {{ pair_form.DELETE }}
+                      <label class="form-check-label text-danger small">Sil</label>
+                    </div>
+                  </div>
+                  {% endif %}
+
+                  {{ pair_form.id }}
+
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <p class="text-muted small mt-2">
+              En az 2 eşleştirme çifti girilmesi gerekir.
+            </p>
+
+          </div>
+        </div>
+
+        <!-- ŞIKLAR — inline formset (question_type=mc veya tf iken görünür) -->
+        <div class="card mb-4" id="choices-section" style="display: none;">
           <div class="card-header fw-semibold">Şıklar</div>
           <div class="card-body">
 
-            <!--
-              management_form ZORUNLU — Django formset'in kaç form
-              gönderildiğini buradan anlar. Olmadan POST hata verir.
-            -->
             {{ choice_formset.management_form }}
 
             <div id="choice-forms">
@@ -115,7 +205,6 @@
                     </div>
                   </div>
 
-                  <!-- Şık silme (sadece kayıtlı şıklarda göster) -->
                   {% if choice_form.instance.pk %}
                   <div class="col-auto">
                     <div class="form-check">
@@ -125,7 +214,6 @@
                   </div>
                   {% endif %}
 
-                  <!-- Formset hidden field'ları — Django'nun iç işleyişi için zorunlu -->
                   {{ choice_form.id }}
 
                 </div>
@@ -149,7 +237,7 @@
             </label>
           </div>
           <div class="form-text text-muted">
-            Şık girilmeden aktif edilse de sistem şık kontrolü yapar.
+            Şık/çift girilmeden aktif edilse de sistem kontrolü kendisi yapar.
           </div>
         </div>
 
@@ -162,4 +250,5 @@
     </div>
   </div>
 </div>
+<script src="{% static 'js/question_form.js' %}"></script>
 {% endblock %}

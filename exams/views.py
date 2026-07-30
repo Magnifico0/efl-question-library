@@ -10,8 +10,28 @@ from accounts.mixins import TeacherRequiredMixin
 from exams.models import Exam
 from exams.forms import ExamGenerationForm
 from exams.services import ExamGeneratorService, ExamGenerationError
+import random 
 
-
+def _shuffle_choices_for_exam(exam,questions):
+    for question in questions:
+        seed = exam.pk*10000042 + question.pk
+        rng = random.Random(seed)
+        shuffled = list(question.choices.all())
+        rng.shuffle(shuffled)
+        question.shuffled_choices = shuffled
+def _prepare_matching_for_exam(exam, questions):
+    """Her matching sorusu için: sol sütun sabit sıralı, sağ sütun karışık."""
+    for question in questions:
+        pairs = list(question.matching_pairs.all())
+        if pairs:
+            seed = exam.pk * 10000043 + question.pk
+            rng = random.Random(seed)
+            right_texts = [p.right_text for p in pairs]
+            shuffled_right = right_texts[:]
+            rng.shuffle(shuffled_right)
+            question.matching_display = list(zip(pairs, shuffled_right))
+        else:
+            question.matching_display = None
 class ExamCreateView(TeacherRequiredMixin, View):
     template_name = "exams/create.html"
 
@@ -43,15 +63,20 @@ class ExamPreviewView(TeacherRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["questions"] = self.object.questions.all().prefetch_related("choices")
+        questions = list(self.object.questions.all().prefetch_related("choices","matching_pairs"))
+        _shuffle_choices_for_exam(self.object, questions)
+        _prepare_matching_for_exam(self.object,questions)
+        context["questions"] = questions
         return context
-
 
 class ExamDownloadView(TeacherRequiredMixin, View):
     def get(self, request, pk):
         exam = get_object_or_404(Exam, pk=pk, teacher=request.user)
-        questions = exam.questions.all().prefetch_related("choices")
+        questions = list(exam.questions.all().prefetch_related("choices","matching_pairs"))
 
+        _shuffle_choices_for_exam(exam,questions)
+        _prepare_matching_for_exam(exam,questions)
+        
         html_string = render_to_string("exams/pdf.html", {
             "exam": exam,
             "questions": questions,

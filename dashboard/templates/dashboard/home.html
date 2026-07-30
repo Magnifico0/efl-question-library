@@ -29,6 +29,7 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
+          <th>Sınav Adı</th>
           <th>Toplam Soru</th>
           <th>Tarih</th>
           <th></th>
@@ -43,6 +44,7 @@
           <td class="text-end">
             <a href="{% url 'exams:preview' exam.pk %}" class="btn btn-sm btn-outline-secondary">Görüntüle</a>
           </td>
+          <td>{{ exam.name }}</td>
         </tr>
         {% endfor %}
       </tbody>

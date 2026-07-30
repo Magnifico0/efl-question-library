@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.user_role_context', #context processor
+                'core.context_processors.enabled_sections', #enabled sections 
 
             ],
         },
@@ -125,3 +126,4 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR,'media')
 
+ENABLED_SECTIONS = ["general", "reading", "listening", "writing", "speaking"]

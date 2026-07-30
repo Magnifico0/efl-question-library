@@ -15,6 +15,9 @@ class Exam(models.Model):
         on_delete=models.CASCADE,
         related_name='exams'
     )
+    name = models.CharField(
+        max_length=100, blank=True
+    )
     parameters = models.JSONField()
     questions = models.ManyToManyField(
         Question,

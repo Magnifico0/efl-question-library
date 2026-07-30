@@ -43,3 +43,39 @@
     font-weight: 700;
     margin-right: 8px;
 }
+.fill-blank-line {
+    margin-left: 16px;
+    margin-top: 4px;
+    width: 250px;
+    height: 16px;
+    border-bottom: 1px solid #333;
+}
+
+.matching-table {
+    border-collapse: collapse;
+    margin-left: 16px;
+}
+
+.matching-table td {
+    padding: 4px 12px;
+    vertical-align: top;
+}
+
+.open-ended-block {
+    margin-left: 16px;
+    margin-top: 6px;
+}
+
+.writing-lines div {
+    width: 100%;
+    max-width: 500px;
+    height: 20px;
+    border-bottom: 1px solid #999;
+    margin-bottom: 4px;
+}
+
+.instruction-text {
+    color: #666;
+    font-style: italic;
+    margin-bottom: 4px;
+}

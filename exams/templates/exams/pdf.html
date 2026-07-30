@@ -1,21 +1,73 @@
+{% load core_tags %}
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
 <style>
     body { font-family: Arial, sans-serif; font-size: 12px; }
-    h1 { font-size: 18px; margin-bottom: 20px; }
+
+    .pdf-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #333;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+    .header-left h1 { font-size: 20px; margin: 0 0 4px 0; }
+    .header-left h2 { font-size: 14px; font-weight: normal; color: #444; margin: 0; }
+    .header-right { font-size: 12px; text-align: right; }
+    .header-right p { margin: 0 0 8px 0; }
+
     .question { margin-bottom: 18px; page-break-inside: avoid; }
     .question-text { font-weight: bold; margin-bottom: 6px; }
     .choice { margin-left: 16px; }
     .choice-letter { font-weight: bold; margin-right: 6px; }
     .answer-key { page-break-before: always; }
     .answer-key-item { margin-bottom: 4px; }
+
+    .fill-blank-line {
+        margin-left: 16px;
+        margin-top: 4px;
+        width: 250px;
+        height: 16px;
+        border-bottom: 1px solid #333;
+    }
+
+    .writing-lines {
+        margin-left: 16px;
+        margin-top: 6px;
+    }
+    .writing-lines div {
+        width: 100%;
+        height: 20px;
+        border-bottom: 1px solid #999;
+        margin-bottom: 4px;
+    }
+    .instruction-text {
+        margin-left: 16px;
+        color: #555;
+        font-style: italic;
+        margin-bottom: 4px;
+    }
+
+    .matching-table { border-collapse: collapse; margin-left: 16px; }
+    .matching-table td { padding: 4px 12px; vertical-align: top; }
 </style>
 </head>
 <body>
 
-<h1>Sınav #{{ exam.pk }} — Toplam {{ exam.parameters.total }} Soru</h1>
+<div class="pdf-header">
+    <div class="header-left">
+        <h1>{{ exam.organization.name }}</h1>
+        {% if exam.name %}<h2>{{ exam.name }}</h2>{% endif %}
+    </div>
+    <div class="header-right">
+        <p>Öğrenci Adı: ________________</p>
+        <p>Tarih: ________________</p>
+        <p>Puan: ________________</p>
+    </div>
+</div>
 
 {% for question in questions %}
 <div class="question">
@@ -23,12 +75,40 @@
         {{ forloop.counter }}. {{ question.text }}
         {% if question.audio_label %}<em>({{ question.audio_label }})</em>{% endif %}
     </div>
-    {% for choice in question.choices.all %}
-    <div class="choice">
-        <span class="choice-letter">{{ forloop.counter|add:64|stringformat:"c" }}.</span>
-        {{ choice.text }}
-    </div>
-    {% endfor %}
+
+    {% if question.question_type == "matching" %}
+        <table class="matching-table">
+            <tbody>
+            {% for pair, right_text in question.matching_display %}
+                <tr>
+                    <td>{{ forloop.counter }}. {{ pair.left_text }}</td>
+                    <td>{{ forloop.counter|to_letter }}. {{ right_text }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    {% elif question.question_type == "fib" %}
+        <div class="fill-blank-line"></div>
+
+    {% elif question.question_type == "open_ended" %}
+        {% if question.word_count_instruction %}
+            <p class="instruction-text">{{ question.word_count_instruction }}</p>
+        {% endif %}
+        <div class="writing-lines">
+            <div></div><div></div><div></div><div></div><div></div>
+        </div>
+
+    {% elif question.question_type == "tf" %}
+        {% for choice in question.shuffled_choices %}
+        <div class="choice">○ {{ choice.text }}</div>
+        {% endfor %}
+
+    {% else %}
+        {% for choice in question.shuffled_choices %}
+        <div class="choice"><span class="choice-letter">{{ forloop.counter|to_letter }})</span>{{ choice.text }}</div>
+        {% endfor %}
+    {% endif %}
 </div>
 {% endfor %}
 
@@ -37,9 +117,19 @@
     {% for question in questions %}
     <div class="answer-key-item">
         {{ forloop.counter }}.
-        {% for choice in question.choices.all %}
-            {% if choice.is_correct %}{{ forloop.counter|add:64|stringformat:"c" }}{% endif %}
-        {% endfor %}
+        {% if question.question_type == "matching" %}
+            {% for pair, right_text in question.matching_display %}
+                {{ forloop.counter }}-{{ pair.right_text }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        {% elif question.question_type == "fib" %}
+            {{ question.correct_answer_text }}
+        {% elif question.question_type == "open_ended" %}
+            <span class="text-muted">(değerlendirici tarafından puanlanır)</span>
+        {% else %}
+            {% for choice in question.shuffled_choices %}
+                {% if choice.is_correct %}{{ forloop.counter|to_letter }}{% endif %}
+            {% endfor %}
+        {% endif %}
     </div>
     {% endfor %}
 </div>

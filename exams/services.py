@@ -2,7 +2,7 @@ import random
 from django.db.models import Q
 from questions.models import Question
 from exams.models import Exam, TeacherQuestionIndex
-
+from django.utils import timezone
 
 class ExamGenerationError(Exception):
     """
@@ -91,9 +91,11 @@ class ExamGeneratorService:
         self._validate_counts()
         self._sample_questions()
 
+        exam_name = self.params.get("name") or timezone.now().strftime("%d-%m-%Y")
         exam = Exam.objects.create(
             teacher=self.teacher,
             organization=self.teacher.organization,
+            name = exam_name,
             parameters=self.params,
         )
         exam.questions.set(self.selected_questions)

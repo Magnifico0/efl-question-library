@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Paragraf Detayı{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{{ passage.get_kind_display }} — {{ passage.level }}</h1>
+        <a href="{% url 'questions:create' %}?passage={{ passage.pk }}" class="btn btn-primary">
+          <i class="bi bi-plus-lg me-1"></i> Soru Ekle
+        </a>
+      </div>
+
+      <!-- Passage içeriği -->
+      <div class="card mb-4">
+        <div class="card-header fw-semibold">Paragraf İçeriği</div>
+        <div class="card-body">
+          {% if passage.text %}
+            <p class="mb-0">{{ passage.text }}</p>
+          {% endif %}
+          {% if passage.audio %}
+            <audio controls src="{{ passage.audio.url }}" class="w-100 mt-2"></audio>
+            {% if passage.audio_label %}
+              <small class="text-muted d-block mt-1">{{ passage.audio_label }}</small>
+            {% endif %}
+          {% endif %}
+          {% if passage.image %}
+            <img src="{{ passage.image.url }}" class="img-fluid rounded mt-3" alt="{{ passage.image_label }}">
+            {% if passage.image_label %}
+              <small class="text-muted d-block mt-1">{{ passage.image_label }}</small>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Bağlı sorular -->
+      <h2 class="h5 mb-3">Bu Paragrafa Bağlı Sorular ({{ related_questions|length }})</h2>
+
+      {% if related_questions %}
+        <div class="list-group mb-4">
+          {% for question in related_questions %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-info text-dark me-2">{{ question.get_question_type_display }}</span>
+                {{ question.text|truncatechars:70 }}
+              </div>
+              <a href="{% url 'questions:update' question.pk %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-pencil me-1"></i> Düzenle
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted">Henüz bu paragrafa bağlı soru eklenmedi.</p>
+      {% endif %}
+
+      <a href="{% url 'questions:list' %}" class="btn btn-outline-secondary">Sorularıma Dön</a>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

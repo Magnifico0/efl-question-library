@@ -21,8 +21,8 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ["level","text_preview","is_active","organization","created_by"]
-    list_filter = ["level","is_active", "organization","created_by"]
+    list_display = ["level","question_type","section","text_preview","is_active","organization","created_by"]
+    list_filter = ["level","question_type","section","is_active", "organization","created_by"]
     search_fields = ["text"]
     inlines = [ChoiceInline]
 

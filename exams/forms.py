@@ -8,6 +8,14 @@ class ExamGenerationForm(forms.Form):
     form alanlarına 1:1 karşılık gelmiyor — clean() içinde kendi
     JSON yapımızı elle kuruyoruz.
     """
+    name = forms.CharField(
+        required=False,
+        label="Sınav Adı",
+        widget=forms.TextInput(attrs={
+            "class":"form-control",
+            "placeholder":"Boş bırakılırsa tarih otomatik atanır."
+        })
+    )
     total = forms.IntegerField(
         min_value=1,
         label="Toplam Soru Sayısı",
@@ -56,6 +64,7 @@ class ExamGenerationForm(forms.Form):
 
     def get_params(self):
         return {
+            "name" : self.cleaned_data["name"].strip(),
             "total": self.cleaned_data["total"],
             "levels": self.cleaned_data["level_counts"],
             "tags": [tag.id for tag in self.cleaned_data["tags"]],

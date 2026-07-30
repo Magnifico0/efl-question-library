@@ -13,6 +13,7 @@
       <thead class="table-light">
         <tr>
           <th>#</th>
+          <th>Sınav Adı</th>
           <th>Toplam Soru</th>
           <th>Tarih</th>
           <th></th>
@@ -22,6 +23,7 @@
         {% for exam in exams %}
         <tr>
           <td>{{ exam.pk }}</td>
+          <td>{{ exam.name }}</td>
           <td>{{ exam.parameters.total }}</td>
           <td>{{ exam.created_at|date:"d.m.Y H:i" }}</td>
           <td class="text-end">

@@ -20,9 +20,11 @@ from django.urls import path, include
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 
+from django.views.generic import RedirectView
 
 
 urlpatterns = [
+    path("", RedirectView.as_view(url="/login/", permanent=False)), 
     path('admin/', admin.site.urls),
     path("", include("accounts.urls")),
     path("dashboard/", include("dashboard.urls")),    

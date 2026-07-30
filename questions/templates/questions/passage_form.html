@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Yeni Paragraf/Ses{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <h1 class="h3 mb-4">Yeni Paragraf/Ses Ekle</h1>
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="card mb-4">
+          <div class="card-header fw-semibold">Paragraf Bilgileri</div>
+          <div class="card-body">
+
+            <!-- Tür — reading/listening alan gösterimini yönlendirir -->
+            <div class="mb-3">
+              <label class="form-label">Tür</label>
+              {{ form.kind }}
+              {% if form.kind.errors %}
+                <div class="text-danger small">{{ form.kind.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Seviye -->
+            <div class="mb-3">
+              <label class="form-label">Seviye</label>
+              {{ form.level }}
+              {% if form.level.errors %}
+                <div class="text-danger small">{{ form.level.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Reading: metin (sadece kind=reading iken görünür) -->
+            <div class="mb-3" id="reading-field" style="display: none;">
+              <label class="form-label">Paragraf Metni</label>
+              {{ form.text }}
+              {% if form.text.errors %}
+                <div class="text-danger small">{{ form.text.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Listening: ses + etiket (sadece kind=listening iken görünür) -->
+            <div id="listening-fields" style="display: none;">
+              <div class="mb-3">
+                <label class="form-label">Ses Dosyası</label>
+                {{ form.audio }}
+                {% if object.audio %}
+                  <div class="mt-2">
+                    <audio controls src="{{ object.audio.url }}" class="w-100"></audio>
+                  </div>
+                {% endif %}
+                {% if form.audio.errors %}
+                  <div class="text-danger small">{{ form.audio.errors }}</div>
+                {% endif %}
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Ses Etiketi <span class="text-muted">(örn. "Part 1")</span></label>
+                {{ form.audio_label }}
+                {% if form.audio_label.errors %}
+                  <div class="text-danger small">{{ form.audio_label.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Görsel — her iki türde de opsiyonel -->
+            <div class="mb-3">
+              <label class="form-label">Görsel <span class="text-muted">(opsiyonel)</span></label>
+              {{ form.image }}
+              {% if object.image %}
+                <div class="mt-2">
+                  <small class="text-muted">Mevcut görsel: {{ object.image.name }}</small>
+                </div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Görsel Etiketi <span class="text-muted">(opsiyonel)</span></label>
+              {{ form.image_label }}
+            </div>
+
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Kaydet</button>
+          <a href="{% url 'questions:list' %}" class="btn btn-outline-secondary">İptal</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/passage_form.js' %}"></script>
+{% endblock %}

@@ -11,7 +11,7 @@
 <div class="container py-4">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0">Sınav #{{ exam.pk }}</h1>
+    <h1 class="h3 mb-0">Sınav #{{ exam.name }}</h1>
     <a href="{% url 'exams:download' exam.pk %}" class="btn btn-success">
       <i class="bi bi-download me-1"></i> PDF İndir
     </a>
@@ -26,6 +26,7 @@
     <p class="fw-semibold">
       {{ forloop.counter }}. {{ question.text }}
       <span class="badge bg-secondary">{{ question.level }}</span>
+      <span class="badge bg-light text-dark border">{{ question.get_question_type_display }}</span>
     </p>
 
     {% if question.image %}
@@ -39,12 +40,41 @@
       </div>
     {% endif %}
 
-    {% for choice in question.choices.all %}
-      <div class="choice-item">
-        <span class="choice-letter">{{ forloop.counter|to_letter }}.</span>
-        {{ choice.text }}
+    {% if question.question_type == "matching" %}
+      <table class="matching-table">
+        <tbody>
+        {% for pair, right_text in question.matching_display %}
+          <tr>
+            <td>{{ forloop.counter }}. {{ pair.left_text }}</td>
+            <td>{{ forloop.counter|to_letter }}. {{ right_text }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+    {% elif question.question_type == "fib" %}
+      <div class="fill-blank-line"></div>
+
+    {% elif question.question_type == "open_ended" %}
+      <div class="open-ended-block">
+        {% if question.word_count_instruction %}
+          <p class="instruction-text">{{ question.word_count_instruction }}</p>
+        {% endif %}
+        <div class="writing-lines">
+          <div></div><div></div><div></div>
+        </div>
       </div>
-    {% endfor %}
+
+    {% elif question.question_type == "tf" %}
+      {% for choice in question.shuffled_choices %}
+        <div class="choice-item"><span class="choice-letter">○</span>{{ choice.text }}</div>
+      {% endfor %}
+
+    {% else %}
+      {% for choice in question.shuffled_choices %}
+        <div class="choice-item"><span class="choice-letter">{{ forloop.counter|to_letter }})</span>{{ choice.text }}</div>
+      {% endfor %}
+    {% endif %}
   </div>
   {% endfor %}
 
