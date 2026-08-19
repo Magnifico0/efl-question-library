@@ -52,6 +52,20 @@
     }
 
     .matching-table { border-collapse: collapse; margin-left: 16px; }
+    .passage-block {
+    border: 1px solid #ccc;
+    background: #fafafa;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+    }
+    .passage-instruction {
+        font-weight: bold;
+        font-style: italic;
+        margin: 0 0 6px 0;
+    }
+    .passage-text { white-space: pre-line; margin: 0; }
+    .passage-audio-link { font-size: 11px; color: #444; }
     .matching-table td { padding: 4px 12px; vertical-align: top; }
 </style>
 </head>
@@ -69,54 +83,31 @@
     </div>
 </div>
 
-{% for question in questions %}
-<div class="question">
-    <div class="question-text">
-        {{ forloop.counter }}. {{ question.text }}
-        {% if question.audio_label %}<em>({{ question.audio_label }})</em>{% endif %}
-    </div>
-
-    {% if question.question_type == "matching" %}
-        <table class="matching-table">
-            <tbody>
-            {% for pair, right_text in question.matching_display %}
-                <tr>
-                    <td>{{ forloop.counter }}. {{ pair.left_text }}</td>
-                    <td>{{ forloop.counter|to_letter }}. {{ right_text }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-
-    {% elif question.question_type == "fib" %}
-        <div class="fill-blank-line"></div>
-
-    {% elif question.question_type == "open_ended" %}
-        {% if question.word_count_instruction %}
-            <p class="instruction-text">{{ question.word_count_instruction }}</p>
-        {% endif %}
-        <div class="writing-lines">
-            <div></div><div></div><div></div><div></div><div></div>
+{% for block in render_blocks %}
+    {% if block.type == "passage_group" %}
+        <div class="passage-block">
+            {% if block.passage.text %}
+                <p class="passage-instruction">Aşağıdaki metni okuyun ve soruları cevaplayın.</p>
+                <p class="passage-text">{{ block.passage.text }}</p>
+            {% elif block.passage.audio %}
+                <p class="passage-instruction">Aşağıdaki sesi dinleyin ve soruları cevaplayın.</p>
+                {% if block.passage.audio_label %}<p><em>{{ block.passage.audio_label }}</em></p>{% endif %}
+                <p class="passage-audio-link">Ses dosyası: {{ block.passage.audio.url }}</p>
+            {% endif %}
         </div>
-
-    {% elif question.question_type == "tf" %}
-        {% for choice in question.shuffled_choices %}
-        <div class="choice">○ {{ choice.text }}</div>
+        {% for question in block.questions %}
+            {% include "exams/_questions_pdf.html" with question=question %}
         {% endfor %}
-
     {% else %}
-        {% for choice in question.shuffled_choices %}
-        <div class="choice"><span class="choice-letter">{{ forloop.counter|to_letter }})</span>{{ choice.text }}</div>
-        {% endfor %}
+        {% include "exams/_questions_pdf.html" with question=block.question %}
     {% endif %}
-</div>
 {% endfor %}
 
 <div class="answer-key">
     <h1>Cevap Anahtarı</h1>
     {% for question in questions %}
     <div class="answer-key-item">
-        {{ forloop.counter }}.
+        {{question.exam_number }}.
         {% if question.question_type == "matching" %}
             {% for pair, right_text in question.matching_display %}
                 {{ forloop.counter }}-{{ pair.right_text }}{% if not forloop.last %}, {% endif %}

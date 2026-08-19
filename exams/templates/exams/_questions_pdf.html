@@ -1,0 +1,41 @@
+{% load core_tags %}
+<div class="question">
+    <div class="question-text">
+        {{ question.exam_number }}. {{ question.text }}
+        {% if question.audio_label %}<em>({{ question.audio_label }})</em>{% endif %}
+    </div>
+
+    {% if question.question_type == "matching" %}
+        <table class="matching-table">
+            <tbody>
+            {% for pair, right_text in question.matching_display %}
+                <tr>
+                    <td>{{ forloop.counter }}. {{ pair.left_text }}</td>
+                    <td>{{ forloop.counter|to_letter }}. {{ right_text }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    {% elif question.question_type == "fib" %}
+        <div class="fill-blank-line"></div>
+
+    {% elif question.question_type == "open_ended" %}
+        {% if question.word_count_instruction %}
+            <p class="instruction-text">{{ question.word_count_instruction }}</p>
+        {% endif %}
+        <div class="writing-lines">
+            <div></div><div></div><div></div><div></div><div></div>
+        </div>
+
+    {% elif question.question_type == "tf" %}
+        {% for choice in question.shuffled_choices %}
+        <div class="choice">○ {{ choice.text }}</div>
+        {% endfor %}
+
+    {% else %}
+        {% for choice in question.shuffled_choices %}
+        <div class="choice"><span class="choice-letter">{{ forloop.counter|to_letter }})</span>{{ choice.text }}</div>
+        {% endfor %}
+    {% endif %}
+</div>

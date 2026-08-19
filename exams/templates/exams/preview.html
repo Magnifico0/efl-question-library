@@ -21,61 +21,26 @@
     Toplam {{ exam.parameters.total }} soru — {{ exam.created_at|date:"d.m.Y H:i" }}
   </p>
 
-  {% for question in questions %}
-  <div class="question-card">
-    <p class="fw-semibold">
-      {{ forloop.counter }}. {{ question.text }}
-      <span class="badge bg-secondary">{{ question.level }}</span>
-      <span class="badge bg-light text-dark border">{{ question.get_question_type_display }}</span>
-    </p>
-
-    {% if question.image %}
-      <img src="{{ question.image.url }}" class="img-fluid mb-2" style="max-width: 300px;">
-    {% endif %}
-
-    {% if question.audio %}
-      <div class="mb-2">
-        {% if question.audio_label %}<small class="text-muted d-block">{{ question.audio_label }}</small>{% endif %}
-        <audio controls src="{{ question.audio.url }}"></audio>
-      </div>
-    {% endif %}
-
-    {% if question.question_type == "matching" %}
-      <table class="matching-table">
-        <tbody>
-        {% for pair, right_text in question.matching_display %}
-          <tr>
-            <td>{{ forloop.counter }}. {{ pair.left_text }}</td>
-            <td>{{ forloop.counter|to_letter }}. {{ right_text }}</td>
-          </tr>
-        {% endfor %}
-        </tbody>
-      </table>
-
-    {% elif question.question_type == "fib" %}
-      <div class="fill-blank-line"></div>
-
-    {% elif question.question_type == "open_ended" %}
-      <div class="open-ended-block">
-        {% if question.word_count_instruction %}
-          <p class="instruction-text">{{ question.word_count_instruction }}</p>
-        {% endif %}
-        <div class="writing-lines">
-          <div></div><div></div><div></div>
+  {% for block in render_blocks %}
+      {% if block.type == "passage_group" %}
+        <div class="passage-block card mb-3">
+          <div class="card-body">
+            {% if block.passage.text %}
+              <p class="fw-semibold fst-italic">Aşağıdaki metni okuyun ve soruları cevaplayın.</p>
+              <p class="passage-text">{{ block.passage.text|linebreaksbr }}</p>
+            {% elif block.passage.audio %}
+              <p class="fw-semibold fst-italic">Aşağıdaki sesi dinleyin ve soruları cevaplayın.</p>
+              {% if block.passage.audio_label %}<small class="text-muted d-block">{{ block.passage.audio_label }}</small>{% endif %}
+              <audio controls src="{{ block.passage.audio.url }}"></audio>
+            {% endif %}
+          </div>
         </div>
-      </div>
-
-    {% elif question.question_type == "tf" %}
-      {% for choice in question.shuffled_choices %}
-        <div class="choice-item"><span class="choice-letter">○</span>{{ choice.text }}</div>
-      {% endfor %}
-
-    {% else %}
-      {% for choice in question.shuffled_choices %}
-        <div class="choice-item"><span class="choice-letter">{{ forloop.counter|to_letter }})</span>{{ choice.text }}</div>
-      {% endfor %}
-    {% endif %}
-  </div>
+        {% for question in block.questions %}
+          {% include "exams/_question_preview.html" with question=question %}
+        {% endfor %}
+      {% else %}
+        {% include "exams/_question_preview.html" with question=block.question %}
+      {% endif %}
   {% endfor %}
 
 </div>

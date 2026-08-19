@@ -19,10 +19,13 @@ class Exam(models.Model):
         max_length=100, blank=True
     )
     parameters = models.JSONField()
+    
     questions = models.ManyToManyField(
         Question,
+        through="ExamQuestion",
         related_name='exams'
     )
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta: 
@@ -30,7 +33,26 @@ class Exam(models.Model):
 
     def __str__(self):
         return f"Exam #{self.pk} - {self.teacher} - {self.created_at: %d-%m-%Y}"
-    
+
+class ExamQuestion(models.Model):
+    """
+    Exam - Question ara tablosu 
+    """
+    exam = models.ForeignKey(
+        Exam,
+        on_delete=models.CASCADE
+    )
+    question = models.ForeignKey(
+        Question,
+        on_delete=models.CASCADE
+    )
+    order = models.PositiveIntegerField()
+    class Meta:
+        ordering = ["order"]
+        unique_together = ("exam","question")
+
+    def __str__(self):
+        return f"{self.exam} - #{self.order} - {self.question}"
 
 class TeacherQuestionIndex(models.Model):
     teacher = models.ForeignKey(

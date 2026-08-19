@@ -32,6 +32,47 @@ def _prepare_matching_for_exam(exam, questions):
             question.matching_display = list(zip(pairs, shuffled_right))
         else:
             question.matching_display = None
+
+def _build_render_blocks(questions):
+    """
+    `questions` zaten doğru sırada (through model + Meta.ordering sayesinde),
+    ve passage'a bağlı sorular her zaman ardışık geliyor (Stage 11 garantisi).
+
+    Bu listeyi template'in kolayca render edebileceği bloklara çevirir:
+      - {"type": "standalone", "question": q}
+      - {"type": "passage_group", "passage": p, "questions": [q1, q2, ...]}
+
+    Ayrıca her soruya, sınav genelinde tutarlı kalacak bir `exam_number`
+    (1, 2, 3, ...) atar — soru gövdesinde ve cevap anahtarında aynı numara
+    kullanılabilsin diye. forloop.counter'a güvenmiyoruz çünkü passage
+    grupları için iç içe döngü kullanılacak ve forloop.counter iç döngüde
+    sıfırlanır.
+    """
+    blocks = []
+    current_group = None
+    number = 0
+
+    for question in questions:
+        number += 1
+        question.exam_number = number
+
+        if question.passage_id is not None:
+            if current_group is not None and current_group["passage_id"] == question.passage_id:
+                current_group["questions"].append(question)
+            else:
+                current_group = {
+                    "type": "passage_group",
+                    "passage": question.passage,
+                    "passage_id": question.passage_id,
+                    "questions": [question],
+                }
+                blocks.append(current_group)
+        else:
+            current_group = None
+            blocks.append({"type": "standalone", "question": question})
+
+    return blocks
+
 class ExamCreateView(TeacherRequiredMixin, View):
     template_name = "exams/create.html"
 
@@ -63,23 +104,28 @@ class ExamPreviewView(TeacherRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        questions = list(self.object.questions.all().prefetch_related("choices","matching_pairs"))
+        questions = list(self.object.questions.all().select_related("passage")
+                         .prefetch_related("choices","matching_pairs"))
         _shuffle_choices_for_exam(self.object, questions)
         _prepare_matching_for_exam(self.object,questions)
         context["questions"] = questions
+        context["render_blocks"] = _build_render_blocks(questions)
         return context
 
 class ExamDownloadView(TeacherRequiredMixin, View):
     def get(self, request, pk):
         exam = get_object_or_404(Exam, pk=pk, teacher=request.user)
-        questions = list(exam.questions.all().prefetch_related("choices","matching_pairs"))
+        questions = list(exam.questions.all().select_related("passage")
+                         .prefetch_related("choices","matching_pairs"))
 
         _shuffle_choices_for_exam(exam,questions)
         _prepare_matching_for_exam(exam,questions)
+        render_blocks = _build_render_blocks(questions)
         
         html_string = render_to_string("exams/pdf.html", {
             "exam": exam,
             "questions": questions,
+            "render_blocks" : render_blocks
         })
 
         pdf_file = HTML(string=html_string).write_pdf()

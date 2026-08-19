@@ -13,7 +13,7 @@ A Django web application for English language schools. Teachers log in and gener
 | `accounts/` | ✅ Done |
 | `core/` | ✅ Done |
 | `questions/` | 🔧 In progress — Stage 3 done, Stage 9 (Fill in the Blank/Matching) done, **Stage 9.5 (Section/Type refactor) next**, then Stage 10 (Passage) |
-| `exams/` | ✅ Done (Stage 4) — Stage 8 done (shuffle, PDF header). Stage 11, 12 pending (passage-aware generation, section scoring) |
+| `exams/` | ✅ Done (Stage 4) — Stage 8 done (shuffle, PDF header). Stage 11 in progress — passage-aware generation rebuilt around per-level passage counts (see Stage 11 REVISED below), Stage 12 pending |
 | `dashboard/` | ✅ Done (Stage 5) |
 | `org/` | ✅ Done (Stage 6) — Stage 13 will extend it (pool breakdown stats) |
 
@@ -111,7 +111,7 @@ core/        # Shared mixins, context processors, template tags — no models, n
   - `passage` FK *(Stage 10, null=True → standalone question if empty)*
 - **Choice** → `question` FK, `text`, `is_correct` (used when `question_type` is `mc` or `tf`)
 - **MatchingPair** *(Stage 9)* → `question` FK, `left_text`, `right_text` (used when `question_type=matching`)
-- **Passage** *(Stage 10)* → `type` (reading/listening), `level` (A1–C2), `text` (reading), `audio`/`audio_label` (listening), `created_by` FK. Represents a shared paragraph or audio clip that one or more questions depend on.
+- **Passage** *(Stage 10)* → `kind` (reading/listening), `level` (A1–C2), `text` (reading), `audio`/`audio_label` (listening), `image`/`image_label`, `created_by` FK. Represents a shared paragraph or audio clip that one or more questions depend on. `level` exists specifically to make passage selection level-aware — see Stage 11 REVISED in the Design Decision Log for why.
 
 > **`question_type` and `section` are independent axes.** `question_type` decides *how a question is rendered* (choices vs. blank line vs. matching columns vs. open writing space). `section` decides *which skill it belongs to* and whether it's tied to a `Passage`. Any combination of the two is valid — e.g. a Reading-section question can be Multiple Choice, True/False, Fill in the Blank, or Matching; a `general`-section question can be any of the same four types. `open_ended` is only used by `writing`/`speaking` sections.
 
@@ -145,6 +145,13 @@ Questions may include an audio file for listening exercises. `audio` is a `FileF
     "C1": 6
   },
   "tags": [3, 7],
+  "reading_levels": {
+    "B1": 3,
+    "B2": 2
+  },
+  "listening_levels": {
+    "C1": 2
+  },
   "scoring": {
     "reading": 5,
     "listening": 3,
@@ -152,7 +159,7 @@ Questions may include an audio file for listening exercises. `audio` is a `FileF
   }
 }
 ```
-> Level values are exact question counts entered directly by the teacher (not percentages). The sum of all level counts must equal `total` — enforced live in the UI with JS and re-validated server-side. The `scoring` key is added in Stage 12.
+> Level values are exact question counts entered directly by the teacher (not percentages). The sum of all level counts must equal `total` — enforced live in the UI with JS and re-validated server-side. `reading_levels` / `listening_levels` *(Stage 11 REVISED)* are a **subset** of `levels` — for each level, `reading_levels[L] + listening_levels[L]` must not exceed `levels[L]`; the remainder for that level is drawn from standalone/writing/speaking questions. There is no `passage_count` field — how many distinct passages are used per level is decided automatically by the generation algorithm. The `scoring` key is added in Stage 12.
 
 ---
 
@@ -432,6 +439,37 @@ Originally planned as "3–5 sub-questions per passage" with a formset-driven fl
 ### Why Speaking is built but toggle-able
 Whether the school will keep a Speaking section long-term is not settled (pending discussion). Rather than leaving it out and doing a risky removal later, or building it in a way that's hard to undo, it's included in the model now but gated by `settings.ENABLED_SECTIONS`. Removing it from that list hides it from every contributor/teacher/org_admin-facing view without touching the database — existing Speaking questions and any exams that used them stay intact, unaffected, and simply invisible until re-enabled.
 
+
+### Why `Exam.questions` was migrated to a `through` model
+Passage-linked questions must appear consecutively (unbroken) in the exam output (Stage 11). A plain M2M field cannot guarantee question order at the database level. Two options were considered:
+1. `through` model (`ExamQuestion` + `order` field) — order guaranteed at the DB level, `exam.questions.all()` comes back in the correct order automatically
+2. Storing order inside `Exam.parameters` JSON — no migration needed, but manual sorting code would have to be repeated in every view
+
+`through` was chosen because: (a) the project isn't in production yet, so the migration risk is near-zero right now — this same migration would be far more costly once real exam data has accumulated; (b) it requires zero extra code in the views, since `Meta.ordering` makes the read side work automatically; (c) if a future feature ever needs "teacher manually reorders questions," the `order` field already provides the foundation for it.
+
+**Note:** Django does not support converting an existing M2M field into a `through`-based one in a single migration (`ValueError: cannot alter to or from M2M fields`). The migration had to be split into two steps: first the field was removed, then re-added with `through`.
+
+### Why Passage question count has a "fixed mode / flexible mode" split — SUPERSEDED, see "Stage 11 REVISED" below
+The first design only had "exactly N questions per passage" (`reading_questions_per_passage`). This created an unrealistic constraint: if the pool had 1 passage with 2 questions and 1 passage with 3 questions, a total of 5 usable questions existed, but a strict "3 per passage" rule would reject the 2-question passage outright. Instead, two modes were added:
+- **Fixed mode** (`questions_per_passage` filled in): exactly that many questions from each passage — for teachers who want symmetry across passages
+- **Flexible mode** (`total_questions` filled in): only the total count matters, distribution across passages is left to the system
+
+The two cannot be filled in at the same time (enforced in `clean()` via the `_validate_passage_section()` helper).
+
+> **This entire fixed/flexible split was removed** once Passage gained a `level` field and a real bug surfaced (see "Stage 11 REVISED" below) — kept here only for history, do not implement this version.
+
+### Stage 11 REVISED — Passage sampling became level-based, "fixed/flexible mode" and `passage_count` removed
+After Stage 11 first shipped, `Passage` had no `level` field of its own — the exam form only had flat `reading_passage_count` / `reading_questions_per_passage` / `reading_questions_total` inputs, with no level breakdown for passage-sourced questions. This produced a real bug: requesting e.g. "2 passages, 4 questions total" could silently return 6 questions, because the passage-selection code path and the level-count-validation code path each ran their own independent `random.sample()`/allocation pass — two different random draws that were never guaranteed to agree with each other.
+
+The fix had two parts:
+1. **`Passage.level` was added.** Without it, passage-derived questions had no anchor to the same per-level quota (`levels` in `Exam.parameters`) that standalone questions use — there was no way to say "this passage's questions count toward the B1 quota."
+2. **`reading_questions_per_passage` / `reading_questions_total` / `reading_passage_count` (and the `listening_*` equivalents) were all removed**, replaced by `reading_levels` / `listening_levels` — per-level dicts, structurally identical to the top-level `levels` dict (see `parameters` JSON example above). The old "fixed mode / flexible mode" split is gone entirely; there is no longer a way to request "exactly N questions per passage," because mixing that with a level-based target created an ambiguous question (which level "bucket" does a fixed-size passage draw count against?).
+3. **`passage_count` (how many distinct passages to use) was removed as a teacher-facing input.** The generation algorithm now decides internally how many distinct passages are needed to cover each level's requested count — it consumes shuffled candidate passages one at a time until the level target is met. This was a deliberate simplicity trade-off: a per-passage-level breakdown (e.g. "Passage 1 → A1 → 3 questions, Passage 2 → A2 → 2 questions" as fully separate, individually named inputs) was considered and rejected as unnecessary complexity for what the school actually needs — level-based totals are enough; which specific passages fulfill them doesn't need to be a teacher decision.
+
+**Why this couldn't just reuse the same code as independent (standalone) question sampling:** standalone sampling is a single-layer operation (filter a flat `Question` queryset by level, then `random.sample`). Passage sampling is necessarily two-layered — first choose which `Passage` objects to draw from (each with its own level and its own question-count capacity), then decide how many questions to take from each chosen passage, such that the per-passage takes sum to the requested per-level target without ever splitting a passage's chosen questions apart in the final exam order. That "partition a target count across capacity-limited groups, then keep each group contiguous" problem doesn't exist for standalone questions, so the same function can't be reused as-is. The two paths do now share the same *shape* of logic (shuffle candidates once, consume greedily, validate against the same shuffled list used for selection) to avoid the original bug's root cause — two independent random draws that could disagree.
+
+### Why insufficient passages/questions does not silently fall back to "best available"
+Discussed: should the system silently narrow the request and say "couldn't fully satisfy this, here's the best combination I found"? Decided against it — the existing `_validate_counts()` philosophy already favors "raise a clear error if insufficient, let the teacher decide" (the level-based check works the same way). A silent automatic fallback risks a teacher getting a less varied exam than expected (fewer passages, fewer questions) and only noticing after printing/distributing the PDF to students. Instead, the error message states the real capacity of existing passages explicitly (e.g. "at most X questions can be provided — reduce the passage count or the requested question count").
 ---
 
 ## How to Use This File
@@ -466,5 +504,3 @@ Whether the school will keep a Speaking section long-term is not settled (pendin
 
 ### Speaking Kararı (Beklemede)
 - Speaking section'ının projede kalıcı olarak tutulup tutulmayacağı ekip arkadaşıyla henüz netleşmedi. Şimdilik `ENABLED_SECTIONS` listesinde açık tutuluyor; karar netleşince listeden çıkarılıp çıkarılmayacağına karar verilecek — model/migration değişikliği gerekmeyecek.
-
-

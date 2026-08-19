@@ -335,18 +335,27 @@ Project setup
 
 > En karmaşık aşama. Stage 9.5 ve Stage 10 tamamlanmadan başlanamaz.
 
-### 11.1 Servis Katmanı Değişiklikleri
-- [ ] `_filter_questions()`: bağımsız sorular (section=general) ile passage'a bağlı sorular (section=reading/listening) ayrı havuzlarda tutulsun, ama seviye sayımına (`level_counts`) birlikte dahil edilsin
-- [ ] Yeni parametreler: `reading_passage_count`, `reading_questions_per_passage`, `listening_passage_count`, `listening_questions_per_passage`
-- [ ] Passage seçimi: yeterli alt sorusu olan passage'lar arasından rastgele N passage seç
-- [ ] Kısmi seçim: bir passage'ın 4 sorusu varsa, istenen sayı kadarını (örn. 2) o passage'dan seç (`random.sample` ile)
-- [ ] `_validate_counts()`: passage sayısı/soru sayısı yeterliliğini de kontrol etsin, yetersizse anlamlı hata versin
-- [ ] `_sample_questions()`: bağımsız soruları ve passage gruplarını birleştirirken, **her passage'ın soruları kendi içinde ardışık kalacak şekilde** sırala (gruplar kendi aralarında ve bağımsız sorularla karışabilir, ama bir grup başladıysa o grubun tüm soruları bitene kadar araya başka soru girmez)
-- [ ] `writing`/`speaking` (`open_ended`) soruları bu aşamada exam generation'a dahil edilip edilmeyeceği netleştirilecek — muhtemelen ayrı bir parametre ile (örn. `writing_prompt_count`) opsiyonel olarak eklenecek
+## Stage 11 — Exam Generation Rework (Passage-Aware Sampling)
 
-### 11.2 Form Değişiklikleri
-- [ ] `ExamGenerationForm`'a Reading/Listening için "kaç paragraf/ses, paragraf başına kaç soru" alanları eklensin
-- [ ] JS doğrulaması: bu yeni alanlardan türeyen toplam soru sayısı da genel `total`'e dahil edilip canlı doğrulansın
+> En karmaşık aşama. Stage 9.5 ve Stage 10 tamamlanmadan başlanamaz.
+
+### 11.1 Model Değişikliği (Sıralama için)
+- [x] `Exam.questions` düz M2M'den `through="ExamQuestion"` modeline geçirildi
+- [x] `ExamQuestion` modeli: `exam` FK, `question` FK, `order` (PositiveIntegerField), `Meta.ordering = ["order"]`
+- [x] Migration iki adımda yapıldı (Django var olan M2M'i doğrudan through'a çeviremiyor): önce `questions` alanı kaldırıldı, sonra `through` ile yeniden eklendi — test verisi olduğu için veri kaybı kabul edildi
+- [x] `generate()` artık `exam.questions.set(...)` yerine `ExamQuestion.objects.bulk_create(...)` kullanacak (through modelli M2M'de `.set()` çalışmıyor)
+
+### 11.2 Servis Katmanı Değişiklikleri
+- [x] `_filter_questions()`: bağımsız sorular (section=general) ile passage'a bağlı sorular (section=reading/listening) ayrı havuzlarda tutulsun, ama seviye sayımına (`level_counts`) birlikte dahil edilsin
+- [x] Yeni `_filter_passages()`: her section (reading/listening) için, yeterli aktif alt sorusu olan Passage'ları `annotate(Count(...))` ile bulur
+- [x] Passage seçimi level'dan bağımsız — öğretmen passage için level seçmiyor, sistem uygun passage'ı otomatik buluyor, `level_counts`'a passage'ın kendi level'ı dahil ediliyor
+- [x] `_validate_counts()`: passage sayısı/soru sayısı yeterliliğini de kontrol etsin — **yetersizse sessizce en yakın alternatifi seçmek yerine, anlamlı ve spesifik hata versin** (örn. "2 reading passage istendi ama en fazla X soru sağlanabiliyor, passage sayısını azaltın veya soru sayısını düşürün")
+- [x] `_sample_questions()`: bağımsız soruları ve passage gruplarını birleştirirken, her passage'ın soruları kendi içinde ardışık kalacak şekilde sırala; sonucu `self.ordered_questions` olarak üret (ExamQuestion.order için kullanılacak)
+
+### 11.3 Form Değişiklikleri
+- [x] `ExamGenerationForm`'a Reading/Listening için 3'er alan eklendi: `{section}_passage_count`, `{section}_questions_per_passage`, `{section}_total_questions`
+- [x] **İki mod desteği:** "Kesin mod" (`questions_per_passage` dolu — her passage'dan tam o kadar soru) ve "Esnek mod" (`total_questions` dolu — passage'lar arası dağılım sisteme bırakılır). İkisi aynı anda doldurulamaz, `clean()` içinde `_validate_passage_section()` yardımcı metoduyla kontrol edilir (reading/listening için tekrar kod yazmamak adına ortak metod kullanıldı)
+- [x] JS doğrulaması: bu yeni alanlardan türeyen toplam soru sayısı da genel `total`'e dahil edilip canlı doğrulansın (backend'de zaten `clean()` içinde kontrol var, JS sadece UX için — kullanıcı iki modu aynı anda doldurduğunda diğer alanı otomatik disable etsin)
 
 **Check:** 2 paragraf, paragraf başına 3 soru istenirse, sınavda o 6 soru art arda ve doğru paragraflarla eşleşmiş halde geliyor. Yetersiz paragraf/soru varsa anlamlı hata veriyor.
 
