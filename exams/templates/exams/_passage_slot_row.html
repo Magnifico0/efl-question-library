@@ -1,0 +1,20 @@
+{# templates/exams/_passage_slot_row.html #}
+{# create.html içindeki {% include %} tarafından, formset her slot_form için #}
+{# tek tek çağırır. JS tarafında rowTemplate() aynı HTML iskeletini üretir -- #}
+{# ikisi farklı yollardan (Django widget / JS string) aynı görünüme ulaşır.  #}
+<div class="row g-2 align-items-end mb-2 slot-row">
+  <div class="col-5">
+    {{ slot_form.level.label_tag }}
+    {{ slot_form.level }}
+  </div>
+  <div class="col-5">
+    {{ slot_form.question_count.label_tag }}
+    {{ slot_form.question_count }}
+  </div>
+  <div class="col-2">
+    <button type="button" class="btn btn-outline-danger btn-sm remove-slot">Sil</button>
+  </div>
+  {% if slot_form.non_field_errors %}
+    <div class="col-12 text-danger small">{{ slot_form.non_field_errors }}</div>
+  {% endif %}
+</div>

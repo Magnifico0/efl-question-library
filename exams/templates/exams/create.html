@@ -49,57 +49,47 @@
             <div id="remaining-display"></div>
           </div>
         </div>
+
         <div class="card mb-4">
           <div class="card-header fw-semibold">Reading Parçaları</div>
           <div class="card-body">
-            <div class="mb-3">
-              <label class="form-label">{{ form.reading_passage_count.label }}</label>
-              {{ form.reading_passage_count }}
+            <p class="text-muted small">
+              Her parça için seviye ve kaç soru geleceğini belirtin. Aynı
+              seviyeden birden fazla parça isteyebilirsiniz.
+            </p>
+            {{ reading_formset.management_form }}
+            <div id="reading-slots" data-prefix="reading">
+              {% for slot_form in reading_formset %}
+                {% include "exams/_passage_slot_row.html" with slot_form=slot_form %}
+              {% endfor %}
             </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">{{ form.reading_questions_per_passage.label }}</label>
-                {{ form.reading_questions_per_passage }}
-                <div class="form-text text-muted">Doldurulursa: her parçadan tam bu kadar soru.</div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">{{ form.reading_questions_total.label }}</label>
-                {{ form.reading_questions_total }}
-                <div class="form-text text-muted">Doldurulursa: parçalar arası dağılım otomatik.</div>
-              </div>
-            </div>
-            <div id="reading-computed-total" class="text-muted small"></div>
-            {% if form.errors %}
-              {# non_field_errors zaten yukarıda gösteriliyor, burada tekrar etmiyoruz #}
-            {% endif %}
+            <button type="button" class="btn btn-outline-secondary btn-sm add-slot" data-target="reading-slots">
+              + Reading Parçası Ekle
+            </button>
           </div>
         </div>
 
         <div class="card mb-4">
           <div class="card-header fw-semibold">Listening Parçaları</div>
           <div class="card-body">
-            <div class="mb-3">
-              <label class="form-label">{{ form.listening_passage_count.label }}</label>
-              {{ form.listening_passage_count }}
+            {{ listening_formset.management_form }}
+            <div id="listening-slots" data-prefix="listening">
+              {% for slot_form in listening_formset %}
+                {% include "exams/_passage_slot_row.html" with slot_form=slot_form %}
+              {% endfor %}
             </div>
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label">{{ form.listening_questions_per_passage.label }}</label>
-                {{ form.listening_questions_per_passage }}
-                <div class="form-text text-muted">Doldurulursa: her parçadan tam bu kadar soru.</div>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label">{{ form.listening_questions_total.label }}</label>
-                {{ form.listening_questions_total }}
-                <div class="form-text text-muted">Doldurulursa: parçalar arası dağılım otomatik.</div>
-              </div>
-            </div>
-            <div id="listening-computed-total" class="text-muted small"></div>
+            <button type="button" class="btn btn-outline-secondary btn-sm add-slot" data-target="listening-slots">
+              + Listening Parçası Ekle
+            </button>
           </div>
         </div>
 
+        <div class="alert alert-info">
+          Bağımsız soru sayısı: <strong id="independent-count">-</strong>
+          <span class="text-muted small">(toplam soru − parçalardan gelen sorular)</span>
+        </div>
 
-
+        <div id="passage-level-warnings" class="alert alert-warning" style="display:none;"></div>
 
         <div class="card mb-4">
           <div class="card-header fw-semibold">Etiketler</div>

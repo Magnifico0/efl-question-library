@@ -7,18 +7,22 @@ from django.template.loader import render_to_string
 from weasyprint import HTML
 
 from accounts.mixins import TeacherRequiredMixin
+from questions.models import Level
 from exams.models import Exam
-from exams.forms import ExamGenerationForm
+from exams.forms import ExamGenerationForm, PassageSlotFormSet
 from exams.services import ExamGeneratorService, ExamGenerationError
-import random 
+import random
 
-def _shuffle_choices_for_exam(exam,questions):
+
+def _shuffle_choices_for_exam(exam, questions):
     for question in questions:
-        seed = exam.pk*10000042 + question.pk
+        seed = exam.pk * 10000042 + question.pk
         rng = random.Random(seed)
         shuffled = list(question.choices.all())
         rng.shuffle(shuffled)
         question.shuffled_choices = shuffled
+
+
 def _prepare_matching_for_exam(exam, questions):
     """Her matching sorusu için: sol sütun sabit sıralı, sağ sütun karışık."""
     for question in questions:
@@ -33,20 +37,11 @@ def _prepare_matching_for_exam(exam, questions):
         else:
             question.matching_display = None
 
+
 def _build_render_blocks(questions):
     """
     `questions` zaten doğru sırada (through model + Meta.ordering sayesinde),
     ve passage'a bağlı sorular her zaman ardışık geliyor (Stage 11 garantisi).
-
-    Bu listeyi template'in kolayca render edebileceği bloklara çevirir:
-      - {"type": "standalone", "question": q}
-      - {"type": "passage_group", "passage": p, "questions": [q1, q2, ...]}
-
-    Ayrıca her soruya, sınav genelinde tutarlı kalacak bir `exam_number`
-    (1, 2, 3, ...) atar — soru gövdesinde ve cevap anahtarında aynı numara
-    kullanılabilsin diye. forloop.counter'a güvenmiyoruz çünkü passage
-    grupları için iç içe döngü kullanılacak ve forloop.counter iç döngüde
-    sıfırlanır.
     """
     blocks = []
     current_group = None
@@ -73,25 +68,50 @@ def _build_render_blocks(questions):
 
     return blocks
 
+
 class ExamCreateView(TeacherRequiredMixin, View):
     template_name = "exams/create.html"
 
+    def _build_context(self, form, reading_formset, listening_formset):
+        return {
+            "form": form,
+            "reading_formset": reading_formset,
+            "listening_formset": listening_formset,
+            "level_choices": [code for code, _ in Level.choices],
+        }
+
     def get(self, request):
-        form = ExamGenerationForm()
-        return render(request, self.template_name, {"form": form})
+        return render(request, self.template_name, self._build_context(
+            ExamGenerationForm(),
+            PassageSlotFormSet(prefix="reading"),
+            PassageSlotFormSet(prefix="listening"),
+        ))
 
     def post(self, request):
         form = ExamGenerationForm(request.POST)
-        if form.is_valid():
-            params = form.get_params()
-            try:
-                service = ExamGeneratorService(teacher=request.user, params=params)
-                exam = service.generate()
-                messages.success(request, "Sınav başarıyla oluşturuldu.")
-                return redirect("exams:preview", pk=exam.pk)
-            except ExamGenerationError as e:
-                form.add_error(None, str(e))
-        return render(request, self.template_name, {"form": form})
+        reading_formset = PassageSlotFormSet(request.POST, prefix="reading")
+        listening_formset = PassageSlotFormSet(request.POST, prefix="listening")
+
+        all_valid = form.is_valid() & reading_formset.is_valid() & listening_formset.is_valid()
+
+        if all_valid:
+            reading_slots = ExamGenerationForm.slots_from_formset(reading_formset)
+            listening_slots = ExamGenerationForm.slots_from_formset(listening_formset)
+
+            form.validate_against_slots(reading_slots, listening_slots)
+
+            if not form.errors:
+                params = form.get_params(reading_slots, listening_slots)
+                try:
+                    service = ExamGeneratorService(teacher=request.user, params=params)
+                    exam = service.generate()
+                    messages.success(request, "Sınav başarıyla oluşturuldu.")
+                    return redirect("exams:preview", pk=exam.pk)
+                except ExamGenerationError as e:
+                    form.add_error(None, str(e))
+
+        return render(request, self.template_name,
+                      self._build_context(form, reading_formset, listening_formset))
 
 
 class ExamPreviewView(TeacherRequiredMixin, DetailView):
@@ -105,27 +125,28 @@ class ExamPreviewView(TeacherRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         questions = list(self.object.questions.all().select_related("passage")
-                         .prefetch_related("choices","matching_pairs"))
+                         .prefetch_related("choices", "matching_pairs"))
         _shuffle_choices_for_exam(self.object, questions)
-        _prepare_matching_for_exam(self.object,questions)
+        _prepare_matching_for_exam(self.object, questions)
         context["questions"] = questions
         context["render_blocks"] = _build_render_blocks(questions)
         return context
+
 
 class ExamDownloadView(TeacherRequiredMixin, View):
     def get(self, request, pk):
         exam = get_object_or_404(Exam, pk=pk, teacher=request.user)
         questions = list(exam.questions.all().select_related("passage")
-                         .prefetch_related("choices","matching_pairs"))
+                         .prefetch_related("choices", "matching_pairs"))
 
-        _shuffle_choices_for_exam(exam,questions)
-        _prepare_matching_for_exam(exam,questions)
+        _shuffle_choices_for_exam(exam, questions)
+        _prepare_matching_for_exam(exam, questions)
         render_blocks = _build_render_blocks(questions)
-        
+
         html_string = render_to_string("exams/pdf.html", {
             "exam": exam,
             "questions": questions,
-            "render_blocks" : render_blocks
+            "render_blocks": render_blocks,
         })
 
         pdf_file = HTML(string=html_string).write_pdf()
