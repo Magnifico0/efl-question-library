@@ -22,6 +22,8 @@ services:
     environment:
       - DEBUG=True
       - DATABASE_URL=postgresql://efl_user:efl_password@db:5432/efl_db
+    stdin_open: True
+    tty : true
     depends_on:
       - db
 

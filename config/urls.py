@@ -21,6 +21,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseForbidden
 
 from django.views.generic import RedirectView
+from django.conf import settings
 
 
 urlpatterns = [
@@ -32,3 +33,10 @@ urlpatterns = [
     path("questions/",include("questions.urls")),
     path("exams/", include("exams.urls")),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns +=[
+        path("__debug__/", include(debug_toolbar.urls)),
+        path("silk/",include("silk.urls", namespace="silk")),
+    ]

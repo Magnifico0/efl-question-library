@@ -24,7 +24,9 @@ class QuestionListView(ContributorRequiredMixin,ListView):
             .prefetch_related("tags")
             .order_by("-id")
         )
-
+        #ipdb satırı 
+        #import ipdb; ipdb.set_trace() 
+        #breakpoint()
         section = self.request.GET.get("section")
         if section:
             qs = qs.filter(section=section)

@@ -370,7 +370,7 @@ Project setup
 - [ ] `Exam.parameters` JSON'una puanlama bilgisi eklensin (örn. `"scoring": {"reading": 5, "listening": 3, "fill_in_blank": 2}`)
 - [ ] `pdf.html`'de her sorunun yanında puan değeri gösterilsin
 - [ ] `open_ended` (writing/speaking) soruları için puan alanı ayrılır ama otomatik notlandırma yapılmaz — öğretmen elle notlandırır
-
+j
 **Check:** Farklı section'lara farklı puan verilip toplamın 100 olduğu, olmadığında hata verdiği doğrulanıyor.
 
 ---

@@ -14,3 +14,22 @@ dependencies = [
     "weasyprint>=69.0",
     "whitenoise>=6.12.0",
 ]
+
+[dependency-groups]
+dev = [
+    "django-debug-toolbar>=7.1.1",
+    "django-extensions>=4.1",
+    "django-silk>=5.5.2",
+    "factory-boy>=3.3.3",
+    "faker>=40.36.0",
+    "ipdb>=0.13.13",
+    "nplusone>=1.0.0",
+    "ruff>=0.16.4",
+]
+
+[tool.ruff]
+line-length=100
+exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E","F","I"]
