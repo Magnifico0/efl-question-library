@@ -305,7 +305,7 @@ Project setup
 > **Revize edildi:** Bir passage'ın sabit bir alt soru sayısı (ör. "3-5 soru") YOKTUR ve soru sayısı baştan alınmaz. Akış, passage oluşturulduktan sonra bir detay sayfasına düşüp oradan tek tek "+ Soru Ekle" ile soru eklemek şeklindedir — bkz. 10.2. Bir passage'ın tek bir sorusu olabilir, ve alt sorular birbirinden farklı `question_type` olabilir (aynı paragrafın altında 2 Multiple Choice + 1 Matching sorusu gayet geçerli).
 
 ### 10.1 Model
-- [ ] `Passage` modeli:
+- [x] `Passage` modeli:
   - `kind` (`reading` / `listening`)
   - `level` (A1-C2, `Question.Level` ile aynı choices)
   - `text` (reading için, null=True)
@@ -317,15 +317,15 @@ Project setup
 - [x] Migration
 
 ### 10.2 Contributor UI — "+ Soru Ekle" Akışı
-- [ ] Soru listesinde/formunda "+ Paragraf/Ses Ekle" butonu → yeni bir `Passage` oluşturur
-- [ ] Passage oluşturma formu (tip, seviye, metin veya ses yükleme)
-- [ ] Passage kaydedildikten sonra `PassageDetailView`'a yönlendirilir: passage içeriği + o passage'a bağlı mevcut soruların listesi (başta boş) + **"+ Soru Ekle"** butonu
-- [ ] "+ Soru Ekle" butonu, `QuestionCreateView`'ı `?passage=<id>` query parametresiyle açar:
+- [x] Soru listesinde/formunda "+ Paragraf/Ses Ekle" butonu → yeni bir `Passage` oluşturur
+- [x] Passage oluşturma formu (tip, seviye, metin veya ses yükleme)
+- [x] Passage kaydedildikten sonra `PassageDetailView`'a yönlendirilir: passage içeriği + o passage'a bağlı mevcut soruların listesi (başta boş) + **"+ Soru Ekle"** butonu
+- [x] "+ Soru Ekle" butonu, `QuestionCreateView`'ı `?passage=<id>` query parametresiyle açar:
   - `level` ve `section` alanları passage'dan miras alınır, formda **salt okunur** gösterilir, değiştirilemez
   - `question_type` (Multiple Choice / True-False / Fill in the Blank / Matching) serbestçe seçilebilir — passage kısıtlaması yok
   - Kaydedildikten sonra tekrar `PassageDetailView`'a döner, kullanıcı isterse tekrar "+ Soru Ekle"'ye basıp yeni bir soru daha ekleyebilir
-- [ ] **Baştan soru sayısı sorulmaz, formset kullanılmaz** — her soru kendi bağımsız POST'uyla, tek tek eklenir. Min/max sınırı yoktur (1 soru da geçerlidir).
-- [ ] `QuestionListView`'da passage'a bağlı sorular gruplu gösterilsin (paragraf başlığı altında alt sorular, standalone sorular ayrı bir bölümde)
+- [x] **Baştan soru sayısı sorulmaz, formset kullanılmaz** — her soru kendi bağımsız POST'uyla, tek tek eklenir. Min/max sınırı yoktur (1 soru da geçerlidir).
+- [x] `QuestionListView`'da passage'a bağlı sorular gruplu gösterilsin (paragraf başlığı altında alt sorular, standalone sorular ayrı bir bölümde)
 
 **Check:** Bir paragraf oluşturup "+ Soru Ekle" ile tek tek 1, 2, 3... istenildiği kadar soru eklenebiliyor — hiçbir noktada "kaç soru?" diye sorulmuyor. Aynı paragrafın altına hem bir Multiple Choice hem bir Matching sorusu eklenebiliyor. Sorular listede paragrafla ilişkili ve doğru seviyede/section'da görünüyor. Passage'a bağlı bir soru düzenlenirken level/section değiştirilemiyor.
 

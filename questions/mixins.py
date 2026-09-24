@@ -18,6 +18,7 @@ class QuestionSaveMixin:
             context["choice_formset"] = ChoiceFormSet(
                 self.request.POST,
                 instance=instance,
+                
                 prefix="choices"
             )
             context["matching_formset"] = MatchingPairFormSet(
@@ -68,7 +69,7 @@ class QuestionSaveMixin:
             formset.save()
 
         messages.success(self.request, self.success_message)
-        return redirect(self.success_url)
+        return redirect(self.get_success_url())
 
     def _compute_is_active(self, question_type, question, formset):
         if question_type == Question.QuestionType.FIB:

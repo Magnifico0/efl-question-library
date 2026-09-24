@@ -14,7 +14,7 @@
         {% if object %}Soruyu Düzenle{% else %}Yeni Soru Ekle{% endif %}
       </h1>
 
-      <form method="post" enctype="multipart/form-data">
+      <form method="post" action="?passage={{ passage.id }}" enctype="multipart/form-data">
         {% csrf_token %}
         {% if passage %}
           <input type="hidden" name="passage" value="{{ passage.pk }}">

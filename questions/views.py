@@ -61,12 +61,12 @@ class QuestionCreateView(ContributorRequiredMixin,QuestionSaveMixin,CreateView):
     success_message = "Soru başarıyla kaydedildi."
 
     def get_passage(self):
-        passage_id = self.request.GET.get("passage")
+        passage_id = self.request.GET.get("passage") or self.request.POST.get("passage")
         if passage_id: 
             return get_object_or_404(Passage,pk=passage_id,created_by=self.request.user)
         return None 
-    def get_from_kwargs(self):
-        kwargs = super().get_from_kwargs()
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
         kwargs["passage"] = self.get_passage()
         return kwargs
     def get_context_data(self, **kwargs):
@@ -77,8 +77,9 @@ class QuestionCreateView(ContributorRequiredMixin,QuestionSaveMixin,CreateView):
     def get_success_url(self):
         passage = self.get_passage()
         if passage:
-            return reverse("questions:passage_detail",kwargs={"pk":passage.pk})
+            return reverse("questions:passage_detail",kwargs={"pk":passage.pk}) 
         return reverse("questions:list")
+        
 
 class QuestionUpdateView(ContributorRequiredMixin,QuestionSaveMixin ,UpdateView):
     model = Question
@@ -98,8 +99,8 @@ class QuestionUpdateView(ContributorRequiredMixin,QuestionSaveMixin ,UpdateView)
     def get_passage(self):
         return self.object.passage
 
-    def get_from_kwargs(self):
-        kwargs = super().get_from_kwargs()
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
         kwargs["passage"] = self.get_passage()
         return kwargs
 
